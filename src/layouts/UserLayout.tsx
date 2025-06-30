@@ -1,0 +1,202 @@
+
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { 
+  LayoutDashboard,
+  Mic,
+  Calendar, 
+  MessageSquare,
+  FileText,
+  Clock,
+  Menu,
+  X,
+  User
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+const panelistMenuItems = [
+    { title: "TABLEAU DE BORD", url: "/dashboard", icon: LayoutDashboard },
+    { title: "MES PANELS", url: "/panels", icon: MessageSquare },
+    { title: "MES INVITATIONS", url: "/invitations", icon: MessageSquare },
+    // { title: "MES SESSIONS", url: "/sessions", icon: Mic },
+    { title: "PLANNING", url: "/planning", icon: Calendar },
+    // { title: "MES QUESTIONS", url: "/questions", icon: MessageSquare },
+    // { title: "MES NOTES (IA)", url: "/notes", icon: FileText },
+    // { title: "MON HISTORIQUE", url: "/history", icon: Clock },
+    { title: "MON PROFIL", url: "/profile", icon: User },
+]
+
+interface UserLayoutProps {
+  children?: React.ReactNode;
+}
+
+function CurrentTime() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="hidden sm:flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+      <Clock className="h-4 w-4" />
+      <div className="flex items-baseline gap-1">
+        <span className="font-medium">{format(currentTime, "HH:mm", { locale: fr })}</span>
+        <span className="text-xs opacity-80">
+          {format(currentTime, "EEE d", { locale: fr })}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function UserLayout({ children }: UserLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || null);
+    });
+  }, []);
+
+  return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900 dark:to-teal-900">
+          {/* Header spécifique panéliste */}
+          <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-emerald-200 dark:border-gray-700 sticky top-0 z-40">
+              <div className="px-2 sm:px-4 lg:px-6">
+                  <div className="flex justify-between items-center h-16">
+                      <div className="flex items-center gap-2 sm:gap-4">
+                          <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSidebarOpen(!sidebarOpen)}
+                              className="lg:hidden"
+                              aria-label="Toggle menu"
+                          >
+                              {sidebarOpen ? (
+                                  <X className="h-5 w-5" />
+                              ) : (
+                                  <Menu className="h-5 w-5" />
+                              )}
+                          </Button>
+
+                          <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center">
+                                  <Mic className="h-5 w-5 text-white" />
+                              </div>
+                              <div>
+                                  <h1 className="text-lg sm:text-xl font-bold text-emerald-900 dark:text-emerald-100">
+                                      PANELFLOW
+                                  </h1>
+                                  <p className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-300">
+                                      Mon espace personnel
+                                  </p>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                          <CurrentTime />
+                          <div className="relative group">
+                              <button className="flex items-center gap-2 focus:outline-none">
+                                  <Avatar className="h-9 w-9">
+                                      <AvatarImage src="/avatars/panelist.png" />
+                                      <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-100">
+                                          <User className="h-4 w-4" />
+                                      </AvatarFallback>
+                                  </Avatar>
+                              </button>
+                              <div className="absolute right-0 mt-2 w-56 origin-top-right bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                  <div className="py-1">
+                                      <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700">
+                                          {userEmail}
+                                      </div>
+                                      <button
+                                          onClick={async () => {
+                                              const { error } = await supabase.auth.signOut()
+                                              if (!error) window.location.href = '/auth/login'
+                                          }}
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                      >
+                                          Déconnexion
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </header>
+
+          <div className="flex">
+              {/* Sidebar spécifique panéliste */}
+              <aside
+                  className={cn(
+                      "fixed inset-y-0 left-0 z-50 w-56 sm:w-64 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-r border-emerald-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 mt-16 lg:mt-0",
+                      sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                  )}
+              >
+                  <nav className="mt-8 px-4 space-y-2">
+                      {panelistMenuItems.map(item => {
+                          const isActive = location.pathname === item.url
+                          return (
+                              <NavLink
+                                  key={item.url}
+                                  to={item.url}
+                                  className={cn(
+                                      "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                      isActive
+                                          ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-100 shadow-sm"
+                                          : "text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-300"
+                                  )}
+                                  onClick={() => setSidebarOpen(false)}
+                              >
+                                  <item.icon className="h-5 w-5" />
+                                  {item.title}
+                              </NavLink>
+                          )
+                      })}
+                  </nav>
+
+                  {/* Info session en cours */}
+                  {/* <div className="mt-8 mx-2 sm:mx-4 p-3 sm:p-4 bg-emerald-100 dark:bg-emerald-900 rounded-lg sm:rounded-xl">
+                      <h3 className="font-semibold text-emerald-900 dark:text-emerald-100 text-xs sm:text-sm mb-1 sm:mb-2">
+                          Session en cours
+                      </h3>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1 sm:mb-2">
+                          Panel Innovation Tech
+                      </p>
+                      <div className="flex items-center gap-1 sm:gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+                          <Clock className="h-3 w-3" />
+                          <span>15:30 restantes</span>
+                      </div>
+                  </div> */}
+              </aside>
+
+              {/* Overlay mobile */}
+              {sidebarOpen && (
+                  <div
+                      className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+                      onClick={() => setSidebarOpen(false)}
+                  />
+              )}
+
+              {/* Contenu principal */}
+              <main className="flex-1 w-full px-2 sm:px-4 py-2 sm:py-4 mt-16 lg:mt-0">
+                  <Outlet />
+              </main>
+          </div>
+      </div>
+  )
+}
