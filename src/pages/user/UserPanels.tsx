@@ -401,7 +401,7 @@ export function UserPanels() {
   const updatePanelStatus = async (panelId: string, newStatus: 'draft' | 'scheduled' | 'live' | 'completed' | 'cancelled') => {
     try {
       await PanelService.changePanelStatus(panelId, newStatus);
-      const updatedPanel = await PanelService.getPanel(panelId);
+      const updatedPanel = await PanelService.getPanelById(panelId);
       setPanels(panels.map(p => p.id === panelId ? updatedPanel : p));
       
       // Mettre à jour le panel dans le modal si ouvert
@@ -947,23 +947,20 @@ export function UserPanels() {
                         <span>{managePanelModal.panel.time}</span>
                       </div>
                     </div>
+                    
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Participants</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold">{managePanelModal.panel.participants?.registered || 0}</span>
-                        <span className="text-muted-foreground">inscrits</span>
-                      </div>
-                    </div>
-                    <div>
+                  <div className="flex flex-row gap-6 items-start">
+                    <div className="flex-1">
                       <Label className="text-sm font-medium text-muted-foreground">Questions</Label>
                       <div className="flex items-center gap-2 mt-1">
                         <MessageSquare className="h-4 w-4 text-muted-foreground" />
                         <span className="font-semibold">{managePanelModal.panel.questions || 0}</span>
                         <span className="text-muted-foreground">questions soumises</span>
                       </div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center">
+                      <Label className="text-sm font-medium text-muted-foreground">QR Code</Label>
+                      <PanelQRCode panel={managePanelModal.panel} size={120} />
                     </div>
                   </div>
                 </div>
@@ -1036,38 +1033,6 @@ export function UserPanels() {
                     )}
                   </div>
                 </div>
-
-                {/* Statistiques détaillées */}
-                <div className="border-t pt-6">
-                  <Label className="text-sm font-medium mb-4 block">Statistiques</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {managePanelModal.panel.participants?.registered || 0}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Participants</div>
-                    </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
-                        {managePanelModal.panel.questions || 0}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Questions</div>
-                    </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600">
-                        {Math.floor(Math.random() * 30) + 70}%
-                      </div>
-                      <div className="text-xs text-muted-foreground">Engagement</div>
-                    </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600">
-                        {Math.floor(Math.random() * 20) + 80}%
-                      </div>
-                      <div className="text-xs text-muted-foreground">Satisfaction</div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Actions principales */}
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button

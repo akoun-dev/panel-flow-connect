@@ -119,9 +119,6 @@ export default function UserPanelQuestions() {
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
               Questions du panel
-              <Badge variant="outline" className="ml-2">
-                {realtimeStatus === 'SUBSCRIBED' ? 'Connecté' : 'Déconnecté'}
-              </Badge>
             </div>
             {panelTitle && (
               <motion.p
@@ -159,9 +156,6 @@ export default function UserPanelQuestions() {
                 >
                   <div className="flex justify-between items-start">
                     <p>{question.content}</p>
-                    <Badge variant={question.is_answered ? 'default' : 'secondary'}>
-                      {question.is_answered ? 'Répondu' : 'En attente'}
-                    </Badge>
                   </div>
                   {question.responses?.length > 0 && (
                     <div className="mt-2 pl-4 border-l-2 border-gray-200">

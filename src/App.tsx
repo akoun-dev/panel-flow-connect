@@ -34,6 +34,7 @@ import { UserInvitation } from "./pages/user/UserInvitation";
 import UserPanelQuestions from "./pages/user/UserPanelQuestions";
 import QuestionsWrapper from "@/components/QuestionsWrapper";
 import UserPlanning from "./pages/user/UserPlanning";
+import Questions from "./pages/Questions";
 
 const queryClient = new QueryClient();
 
@@ -60,8 +61,6 @@ const App = () => {
               <Route path="dashboard" element={<UserDashboard />} />
               <Route path="panels" element={<UserPanels />} />
               <Route path="planning" element={<UserPlanning />} />
-              {/* <Route path="notes" element={<UserNotes />} />
-              <Route path="history" element={<UserHistory />} /> */}
               <Route path="profile" element={<UserProfile />} />
               <Route path="invitations" element={<UserInvitation />} />
               <Route path="panel-questions" element={<UserPanelQuestions />} />
@@ -84,11 +83,8 @@ const App = () => {
               <Route path="profile" element={<AdminProfilePage />} />
             </Route>
             
-
-
             {/* Route publique pour les questions */}
             <Route path="/panel/:panelId/questions" element={<QuestionsWrapper />} />
-
             {/* Route 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>

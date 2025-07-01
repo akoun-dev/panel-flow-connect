@@ -732,38 +732,6 @@ export function UserDashboard() {
                                     )}
                                 </div>
                             </div>
-
-                            {/* Statistiques détaillées */}
-                            <div className="border-t pt-6">
-                                <Label className="text-sm font-medium mb-4 block">Statistiques</Label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                                        <div className="text-2xl font-bold text-blue-600">
-                                            {managePanelModal.panel.participants}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Participants</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                                        <div className="text-2xl font-bold text-green-600">
-                                            {managePanelModal.panel.questions || 0}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Questions</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                                        <div className="text-2xl font-bold text-purple-600">
-                                            {Math.floor(Math.random() * 30) + 70}%
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Engagement</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                                        <div className="text-2xl font-bold text-orange-600">
-                                            {Math.floor(Math.random() * 20) + 80}%
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Satisfaction</div>
-                                    </div>
-                                </div>
-                            </div>
-
                             {/* Actions principales */}
                             <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button
@@ -890,7 +858,7 @@ export function UserDashboard() {
                         <CardHeader>
                             <CardTitle>Mes panels à venir</CardTitle>
                             <CardDescription>
-                                Vos prochaines sessions (créateur, panéliste, ou participant)
+                                Vos prochaines sessions (modérateur, panéliste)
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
