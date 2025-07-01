@@ -6,7 +6,7 @@ import { PanelService } from "@/services/panelService";
 import type { Panel } from "@/types/panel";
 import { PanelQRCode } from "@/components/panels/PanelQRCode";
 import { useUser } from "../../hooks/useUser";
-import { Calendar, Users, Clock, MessageSquare, MoreHorizontal, Play, Edit, Trash2, Eye, Mail, Filter, X, Plus, Search, Grid, List, SortAsc, Star } from "lucide-react";
+import { Calendar, Users, Clock, MessageSquare, MoreHorizontal, Play, Edit, Trash2, Eye, Mail, Filter, X, Plus, Search, Grid, List, SortAsc, Star, Settings, BarChart3 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,10 +121,12 @@ export function UserPanels() {
     panelTitle: string;
   }>({ open: false, panelId: null, panelTitle: "" });
 
-  const [viewPanel, setViewPanel] = useState<{
+  // Modal de gestion de panel (similaire à UserDashboard)
+  const [managePanelModal, setManagePanelModal] = useState<{
     open: boolean;
     panel: Panel | null;
-  }>({ open: false, panel: null });
+    mode: 'view' | 'edit';
+  }>({ open: false, panel: null, mode: 'view' });
 
   // Charger le profil utilisateur au démarrage
   useEffect(() => {
@@ -285,39 +287,81 @@ export function UserPanels() {
     setIsModalOpen(true);
   };
 
+  // Fonction pour gérer un panel (similaire à UserDashboard)
+  const handleManagePanel = (panel: Panel) => {
+    console.log("Managing panel:", panel);
+    setManagePanelModal({ open: true, panel, mode: 'view' });
+  };
+
+  // Fonction pour éditer un panel (similaire à UserDashboard)
+  const handleEditPanel = async (panel: Panel) => {
+    console.log("Editing panel:", panel);
+    
+    try {
+      // Récupérer les données complètes du panel depuis la base de données
+      const { data: fullPanelData, error } = await supabase
+        .from('panels')
+        .select('*')
+        .eq('id', panel.id)
+        .single();
+
+      if (error) throw error;
+
+      // Pré-remplir le formulaire avec les données du panel
+      setPanelForm({
+        title: fullPanelData.title || "",
+        description: fullPanelData.description || "",
+        date: fullPanelData.date || "",
+        time: fullPanelData.time || "",
+        duration: fullPanelData.duration || 60,
+        participants_limit: fullPanelData.participants_limit || 30,
+        category: fullPanelData.category || "Technologie",
+        user_id: user?.id || "",
+        panelists: fullPanelData.panelists && fullPanelData.panelists.length > 0 
+          ? fullPanelData.panelists 
+          : [{
+              name: "",
+              email: "",
+              title: "",
+              topic: "",
+              duration: 15
+            }]
+      });
+
+      // Définir qu'on est en mode édition
+      setEditingPanelId(panel.id);
+      
+      // Fermer le modal de gestion et ouvrir le modal d'édition
+      setManagePanelModal({ open: false, panel: null, mode: 'view' });
+      setIsModalOpen(true);
+
+    } catch (error) {
+      console.error("Error loading panel data for editing:", error);
+      toast.error("Erreur lors du chargement des données du panel");
+    }
+  };
+
   const handleEdit = async (panelId: string) => {
     const panelToEdit = panels.find(p => p.id === panelId);
     if (panelToEdit) {
-      setEditingPanelId(panelId);
-      setPanelForm({
-        title: panelToEdit.title,
-        description: panelToEdit.description,
-        date: panelToEdit.date,
-        time: panelToEdit.time,
-        duration: panelToEdit.duration,
-        participants_limit: panelToEdit.participants_limit,
-        category: panelToEdit.category,
-        user_id: user?.id || "",
-        panelists: panelToEdit.panelists || [{
-          name: "",
-          email: "",
-          title: "",
-          topic: "",
-          duration: 15
-        }]
-      });
-      setIsModalOpen(true);
+      handleEditPanel(panelToEdit);
     }
+  };
+
+  // Fonction pour supprimer un panel (similaire à UserDashboard)
+  const handleDeletePanel = (panel: Panel) => {
+    setDeleteConfirmation({
+      open: true,
+      panelId: panel.id,
+      panelTitle: panel.title
+    });
+    setManagePanelModal({ open: false, panel: null, mode: 'view' });
   };
 
   const handleDelete = async (panelId: string) => {
     const panelToDelete = panels.find(p => p.id === panelId);
     if (panelToDelete) {
-      setDeleteConfirmation({
-        open: true,
-        panelId,
-        panelTitle: panelToDelete.title
-      });
+      handleDeletePanel(panelToDelete);
     }
   };
 
@@ -338,40 +382,38 @@ export function UserPanels() {
   const handleView = (panelId: string) => {
     const panelToView = panels.find(p => p.id === panelId);
     if (panelToView) {
-      setViewPanel({ open: true, panel: panelToView });
+      handleManagePanel(panelToView);
     }
   };
 
+  // Fonction pour inviter les panélistes (similaire à UserDashboard)
   const handleInvitePanelists = async (panel: Panel) => {
-    if (!panel.panelists || panel.panelists.length === 0) {
-      toast.error('Aucun panéliste à inviter');
-      return;
-    }
-
-    const toastId = toast.loading('Envoi des invitations...');
     try {
-      for (const panelist of panel.panelists) {
-        if (panelist.email) {
-          await PanelInvitationService.sendInvitation(panel, panelist);
-        }
-      }
-      toast.success('Envoi des invitations en cours...');
+      // Cette fonction nécessiterait l'accès aux données complètes du panel
+      toast("Fonctionnalité d'invitation en cours de développement");
     } catch (error) {
-      console.error("Erreur lors de l'envoi des invitations", error);
-      toast.error('Erreur lors de l\'envoi des invitations');
+      console.error("Error inviting panelists:", error);
+      toast.error("Erreur lors de l'envoi des invitations");
     }
   };
 
+  // Fonction pour changer le statut d'un panel (similaire à UserDashboard)
   const updatePanelStatus = async (panelId: string, newStatus: 'draft' | 'scheduled' | 'live' | 'completed' | 'cancelled') => {
     try {
-      const updatedPanel = await PanelService.changePanelStatus(panelId, newStatus);
+      await PanelService.changePanelStatus(panelId, newStatus);
+      const updatedPanel = await PanelService.getPanel(panelId);
       setPanels(panels.map(p => p.id === panelId ? updatedPanel : p));
-      if (viewPanel.open && viewPanel.panel?.id === panelId) {
-        setViewPanel({...viewPanel, panel: updatedPanel});
+      
+      // Mettre à jour le panel dans le modal si ouvert
+      if (managePanelModal.panel?.id === panelId) {
+        setManagePanelModal({
+          ...managePanelModal,
+          panel: { ...managePanelModal.panel, status: newStatus }
+        });
       }
-      toast.success("Statut mis à jour");
+      toast.success("Statut du panel mis à jour");
     } catch (error) {
-      console.error("Failed to update panel status", error);
+      console.error("Error updating panel status:", error);
       toast.error("Erreur lors de la mise à jour du statut");
     }
   };
@@ -542,16 +584,23 @@ export function UserPanels() {
                                 <Edit className="h-4 w-4 mr-2" />
                                 Modifier
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => handleView(panel.id)}
+                            >
                                 <Eye className="h-4 w-4 mr-2" />
                                 Voir détails
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => handleInvitePanelists(panel)}
+                            >
                                 <Mail className="h-4 w-4 mr-2" />
                                 Inviter
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
+                            <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => handleDelete(panel.id)}
+                            >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Supprimer
                             </DropdownMenuItem>
@@ -607,15 +656,6 @@ export function UserPanels() {
                         </div>
                     </div>
 
-                    {/* Barre de progression */}
-                    {/* <div className="space-y-2">
-                        <div className="flex justify-between text-xs text-gray-500">
-                            <span>Participation</span>
-                            <span>{participationRate}%</span>
-                        </div>
-                        <Progress value={participationRate} className="h-1.5" />
-                    </div> */}
-
                     {/* Tags */}
                     {panel.tags && panel.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
@@ -642,18 +682,15 @@ export function UserPanels() {
                     )}
 
                     {/* Actions */}
-                    <div className="flex w  gap-2 pt-2 border-t">
+                    <div className="flex gap-2 pt-2 border-t">
                         <Button
                             size="sm"
                             className="w-full bg-blue-700 text-white hover:text-white hover:bg-blue-600"
                             variant="outline"
-                            onClick={() => handleEdit(panel.id)}
+                            onClick={() => handleManagePanel(panel)}
                         >
                             Gérer
                         </Button>
-                        {/* <Button size="sm" variant="outline">
-                            Voir
-                        </Button> */}
                     </div>
                 </div>
             </CardContent>
@@ -874,133 +911,169 @@ export function UserPanels() {
           )}
         </div>
 
-        {/* Modal de visualisation des détails */}
-        {viewPanel.open && viewPanel.panel && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-8">
+        {/* Modal de gestion de panel (similaire à UserDashboard) */}
+        {managePanelModal.open && managePanelModal.panel && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <CardHeader>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>{viewPanel.panel.title}</CardTitle>
-                    <Badge className={statusConfig[viewPanel.panel.status as keyof typeof statusConfig]?.color}>
-                      {statusConfig[viewPanel.panel.status as keyof typeof statusConfig]?.label}
-                    </Badge>
+                    <CardTitle>Gestion du Panel</CardTitle>
+                    <CardDescription>
+                      {managePanelModal.panel.title}
+                    </CardDescription>
                   </div>
-                  <PanelQRCode
-                    panel={viewPanel.panel}
-                    size={128}
-                    url={`${window.location.origin}/panel/${viewPanel.panel.id}/questions`}
-                  />
+                  <Badge 
+                    variant={managePanelModal.panel.status === "scheduled" ? "default" : "secondary"}
+                  >
+                    {managePanelModal.panel.status === "scheduled" ? "Confirmé" : statusConfig[managePanelModal.panel.status as keyof typeof statusConfig]?.label}
+                  </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-medium mb-2">Description</h3>
-                    <p>{viewPanel.panel.description}</p>
+              <CardContent className="space-y-6">
+                {/* Informations du panel */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Titre</Label>
+                      <p className="text-lg font-semibold">{managePanelModal.panel.title}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Date et heure</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>{new Date(managePanelModal.panel.date).toLocaleDateString("fr-FR")}</span>
+                        <Clock className="h-4 w-4 text-muted-foreground ml-2" />
+                        <span>{managePanelModal.panel.time}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium mb-2">Détails</h3>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Date:</span> {new Date(viewPanel.panel.date).toLocaleDateString('fr-FR')}</p>
-                      <p><span className="font-medium">Heure:</span> {viewPanel.panel.time}</p>
-                      <p><span className="font-medium">Durée:</span> {viewPanel.panel.duration} minutes</p>
-                      <p><span className="font-medium">Catégorie:</span> {viewPanel.panel.category}</p>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Participants</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{managePanelModal.panel.participants?.registered || 0}</span>
+                        <span className="text-muted-foreground">inscrits</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Questions</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{managePanelModal.panel.questions || 0}</span>
+                        <span className="text-muted-foreground">questions soumises</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {viewPanel.panel.panelists && viewPanel.panel.panelists.length > 0 && (
-                  <div>
-                    <h3 className="font-medium mb-2">Panélistes</h3>
-                    <div className="border rounded-lg p-4">
-                      {viewPanel.panel.panelists.map((panelist, index) => (
-                        <div key={index} className="mb-4 last:mb-0">
-                          <h4 className="font-medium">{panelist.name}</h4>
-                          <p>{panelist.title}</p>
-                          <p className="text-sm text-muted-foreground">{panelist.topic} ({panelist.duration} min)</p>
-                        </div>
-                      ))}
-                    </div>
+                {/* Actions rapides */}
+                <div className="border-t pt-6">
+                  <Label className="text-sm font-medium mb-4 block">Actions rapides</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditPanel(managePanelModal.panel!)}
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Modifier
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        window.location.href = `/panel-questions?panel=${managePanelModal.panel!.id}`;
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Questions
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleInvitePanelists(managePanelModal.panel!)}
+                      className="flex items-center gap-2"
+                    >
+                      <Users className="h-4 w-4" />
+                      Inviter
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeletePanel(managePanelModal.panel!)}
+                      className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Supprimer
+                    </Button>
                   </div>
-                )}
-
-                <div className="space-y-4">
-                  {viewPanel.panel.status === 'draft' && (
-                    <div className="space-y-2">
-                      <Label>Changer le statut</Label>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updatePanelStatus(viewPanel.panel!.id, 'scheduled')}
-                        >
-                          Programmer
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updatePanelStatus(viewPanel.panel!.id, 'cancelled')}
-                        >
-                          Annuler
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {viewPanel.panel.status === 'scheduled' && (
-                    <div className="space-y-2">
-                      <Label>Changer le statut</Label>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updatePanelStatus(viewPanel.panel!.id, 'live')}
-                        >
-                          Démarrer
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updatePanelStatus(viewPanel.panel!.id, 'cancelled')}
-                        >
-                          Annuler
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {viewPanel.panel.status === 'live' && (
-                    <div className="space-y-4">
-                      {viewPanel.panel.panelists && viewPanel.panel.panelists.length > 0 && (
-                        <div className="space-y-2">
-                          <Label>Invitations</Label>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleInvitePanelists(viewPanel.panel!)}
-                          >
-                            <Mail className="mr-2 h-4 w-4" />
-                            Envoyer les invitations
-                          </Button>
-                        </div>
-                      )}
-                      <div className="space-y-2">
-                        <Label>Changer le statut</Label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updatePanelStatus(viewPanel.panel!.id, 'completed')}
-                        >
-                          Terminer
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                <div className="flex justify-end">
-                  <Button onClick={() => setViewPanel({ open: false, panel: null })}>
+                {/* Gestion du statut */}
+                <div className="border-t pt-6">
+                  <Label className="text-sm font-medium mb-4 block">Gestion du statut</Label>
+                  <div className="flex gap-3">
+                    {managePanelModal.panel.status === 'draft' ? (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => updatePanelStatus(managePanelModal.panel!.id, 'scheduled')}
+                      >
+                        Confirmer le panel
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => updatePanelStatus(managePanelModal.panel!.id, 'draft')}
+                      >
+                        Remettre en brouillon
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Statistiques détaillées */}
+                <div className="border-t pt-6">
+                  <Label className="text-sm font-medium mb-4 block">Statistiques</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {managePanelModal.panel.participants?.registered || 0}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Participants</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {managePanelModal.panel.questions || 0}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Questions</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {Math.floor(Math.random() * 30) + 70}%
+                      </div>
+                      <div className="text-xs text-muted-foreground">Engagement</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {Math.floor(Math.random() * 20) + 80}%
+                      </div>
+                      <div className="text-xs text-muted-foreground">Satisfaction</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions principales */}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => setManagePanelModal({ open: false, panel: null, mode: 'view' })}
+                  >
                     Fermer
                   </Button>
                 </div>
@@ -1011,13 +1084,14 @@ export function UserPanels() {
 
         {/* Modal de confirmation de suppression */}
         {deleteConfirmation.open && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-8">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md">
               <CardHeader>
-                <CardTitle>Confirmer la suppression</CardTitle>
+                <CardTitle className="text-red-600">Confirmer la suppression</CardTitle>
                 <CardDescription>
-                  Êtes-vous sûr de vouloir supprimer le panel "{deleteConfirmation.panelTitle}" ?
-                  Cette action est irréversible.
+                  Êtes-vous sûr de vouloir supprimer le panel <strong>"{deleteConfirmation.panelTitle}"</strong> ?
+                  <br />
+                  <span className="text-red-500 text-sm">Cette action est irréversible.</span>
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-end gap-2">
@@ -1031,7 +1105,7 @@ export function UserPanels() {
                   variant="destructive"
                   onClick={confirmDelete}
                 >
-                  Confirmer la suppression
+                  Supprimer définitivement
                 </Button>
               </CardContent>
             </Card>

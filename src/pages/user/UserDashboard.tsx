@@ -949,17 +949,6 @@ export function UserDashboard() {
                                                         Gérer
                                                     </Button>
                                                 )}
-                                                {/* <Button 
-                                                    size="sm" 
-                                                    variant={panel.userRole === 'créateur' ? "secondary" : "default"}
-                                                    onClick={() => {
-                                                        window.location.href = `/panel/${panel.id}`;
-                                                    }}
-                                                >
-                                                    {panel.userRole === 'créateur' ? 'Accéder' : 
-                                                     panel.userRole === 'panéliste' ? 'Rejoindre' : 
-                                                     'Participer'}
-                                                </Button> */}
                                             </div>
                                         </div>
                                     ))

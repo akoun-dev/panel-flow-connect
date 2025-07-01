@@ -199,13 +199,7 @@ export default function UserProfile() {
                     disabled={!editing}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Rôle</Label>
-                  <Input
-                    value={profile.role}
-                    disabled={true}
-                  />
-                </div>
+
               </CardContent>
             </Card>
 

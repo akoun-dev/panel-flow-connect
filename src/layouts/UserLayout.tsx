@@ -100,7 +100,7 @@ export function UserLayout({ children }: UserLayoutProps) {
                                       PANELFLOW
                                   </h1>
                                   <p className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-300">
-                                      Mon espace personnel
+                                      Mon espace
                                   </p>
                               </div>
                           </div>

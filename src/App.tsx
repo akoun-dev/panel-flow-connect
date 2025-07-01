@@ -46,7 +46,7 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             {/* Routes d'authentification */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Login />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/register" element={<Register />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
