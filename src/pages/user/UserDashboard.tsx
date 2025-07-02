@@ -401,11 +401,27 @@ export function UserDashboard() {
                 .select('*')
                 .order('date', { ascending: true });
 
+            // 4bis. Récupérer les invitations explicites depuis panel_invitations
+            let invitedPanelIds: string[] = [];
+            const { data: invitations, error: invitationError } = await supabase
+                .from('panel_invitations')
+                .select('panel_id')
+                .eq('panelist_email', userEmail)
+                .eq('status', 'accepted');
+            if (invitationError) {
+                // Si la table n'existe pas (environnement de dev), on ignore l'erreur
+                if (invitationError.code !== '42P01') {
+                    console.error('Error fetching panel invitations:', invitationError);
+                }
+            } else {
+                invitedPanelIds = invitations?.map(inv => inv.panel_id) || [];
+            }
+
             // Filtrer les panels pour inclure :
             // 1. Panels créés par l'utilisateur
             // 2. Panels où l'utilisateur est panéliste
             // 3. Panels où l'utilisateur est invité
-            // 4. TODO: Ajouter les invitations depuis la table 'panel_invitations' si elle existe
+            // 4. Panels avec invitation explicite depuis 'panel_invitations'
             const userPanels = allPanels?.filter(panel => {
                 // 1. Panels créés par l'utilisateur
                 if (panel.user_id === authUser.id) {
@@ -427,15 +443,11 @@ export function UserDashboard() {
                     return true;
                 }
                 
-                // 4. TODO: Ajouter ici la logique pour les invitations explicites
-                // Exemple si vous avez une table 'panel_invitations' :
-                // const { data: invitations } = await supabase
-                //     .from('panel_invitations')
-                //     .select('panel_id')
-                //     .eq('user_email', userEmail)
-                //     .eq('status', 'accepted');
-                // return invitations?.some(inv => inv.panel_id === panel.id);
-                
+                // 4. Panels où l'utilisateur possède une invitation acceptée
+                if (invitedPanelIds.includes(panel.id)) {
+                    return true;
+                }
+
                 return false;
             }) || [];
 
