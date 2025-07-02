@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect } from "react";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Dialog } from "@capacitor/dialog";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
@@ -15,7 +16,6 @@ import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminSettingsPage } from "@/pages/admin/AdminSettingsPage";
 import { AdminReportsPage } from "@/pages/admin/AdminReportsPage";
 import { AdminProfilePage } from "@/pages/admin/AdminProfilePage";
-
 import { Login } from "@/pages/auth/Login";
 import { Register } from "@/pages/auth/Register";
 import { ResetPassword } from "@/pages/auth/ResetPassword";
@@ -38,7 +38,52 @@ import Questions from "./pages/Questions";
 
 const queryClient = new QueryClient();
 
+// Fonction utilitaire pour détecter tous les dashboards
+const isDashboard = (path) => {
+  return (
+    path === "/" ||
+    path === "/dashboard" ||
+    path === "/admin/dashboard"
+  );
+};
+
+const isNative = () =>
+  !!(window.Capacitor?.isNativePlatform?.() || window.Capacitor?.isPluginAvailable?.('App'));
+
 const App = () => {
+  useEffect(() => {
+    if (!isNative()) return;
+
+    const handler = CapacitorApp.addListener('backButton', async ({ canGoBack }) => {
+      const path = window.location.pathname;
+      if (isDashboard(path)) {
+        // Dialog natif Capacitor (meilleure UX mobile)
+        const result = await Dialog.confirm({
+          title: "Quitter l'application",
+          message: "Voulez-vous vraiment quitter l'application ?",
+          okButtonTitle: "Quitter",
+          cancelButtonTitle: "Annuler"
+        });
+        if (result.value) {
+          CapacitorApp.exitApp();
+        }
+        // On stoppe ici, rien d'autre à faire
+        return;
+      }
+
+      // Autres routes
+      if (canGoBack) {
+        window.history.back();
+      } else {
+        CapacitorApp.exitApp();
+      }
+    });
+
+    return () => {
+      handler.then(h => h.remove());
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -66,7 +111,6 @@ const App = () => {
               <Route path="panel-questions" element={<UserPanelQuestions />} />
             </Route>
 
-            
             {/* Routes admin avec AdminLayout */}
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['admin']}>

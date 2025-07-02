@@ -16,8 +16,15 @@ export function PanelQRCode({ panel, size = 128, url }: PanelQRCodeProps) {
   const qrRef = useRef<HTMLDivElement>(null);
   
   const qrValue = useMemo(() => {
-    const baseUrl = window.location.origin;
-    return url || panel.qr_code || `${baseUrl}/panel/${panel.id}/questions`;
+    if (url) return url;
+    if (panel.qr_code) return panel.qr_code;
+    
+    const { protocol, hostname, port } = window.location;
+    const baseUrl = port
+      ? `${protocol}//${hostname}:${port}`
+      : `${protocol}//${hostname}`;
+      
+    return `${baseUrl}/panel/${panel.id}/questions`;
   }, [panel.id, panel.qr_code, url]);
 
   const handleDownload = () => {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/lib/supabase";
+import type { LucideIcon } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import { Panel } from '../types';
 import { toast } from "react-hot-toast";
@@ -58,45 +59,43 @@ export default function Questions({ panel }: { panel?: Panel }) {
   const [filterStatus, setFilterStatus] = useState<'all' | 'answered' | 'unanswered'>('all');
   const [isConnected, setIsConnected] = useState(false);
   const [newQuestionCount, setNewQuestionCount] = useState(0);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const questionsEndRef = useRef<HTMLDivElement>(null);
-
-  // Vérification de la présence du panel
-  if (!panel) {
-    return (
-      <div className="max-w-6xl mx-auto p-6">
-        <Card>
-          <CardContent className="text-center py-12">
-            <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Panel non trouvé</h3>
-            <p className="text-gray-600">
-              Impossible de charger les informations du panel. Veuillez vérifier l'URL.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   // Charger les questions initiales et configurer REALTIME
   useEffect(() => {
-    if (!panel?.id) return;
+    if (!panel?.id) {
+      setHasError(true);
+      setErrorMessage('Panel ID not found');
+      setIsLoading(false);
+      return;
+    }
 
     const fetchQuestions = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching questions for panel:', panel.id);
         
+        // Initial fetch
         const { data, error } = await supabase
           .from('questions')
-          .select('*') // Seulement les champs existants
+          .select('*')
           .eq('panel_id', panel.id)
           .order('created_at', { ascending: false });
 
+        console.log('Questions response:', { data, error });
+
         if (error) throw error;
-        setQuestions(data || []);
+
+        const questions = data || [];
+        setQuestions(questions);
         setIsConnected(true);
+
       } catch (error) {
-        console.error('Error fetching questions:', error);
-        toast.error('Erreur lors du chargement des questions');
+        console.error('Error:', error);
+        toast.error(`Erreur: ${error.message}`);
+        setIsConnected(false);
       } finally {
         setIsLoading(false);
       }
@@ -135,7 +134,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
         },
         (payload) => {
           console.log('Question updated:', payload.new);
-          setQuestions(prev => prev.map(q => 
+          setQuestions(prev => prev.map(q =>
             q.id === payload.new.id ? payload.new as Question : q
           ));
           
@@ -172,7 +171,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
     return () => {
       supabase.removeChannel(questionsChannel);
     };
-  }, [panel?.id]);
+  }, [panel?.id, user?.id]);
 
   // Auto-scroll vers les nouvelles questions
   const scrollToBottom = () => {
@@ -190,34 +189,63 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submit triggered', { newQuestion, panel });
+    
     if (!newQuestion.trim()) {
+      console.log('Validation failed: empty question');
       toast.error('Veuillez saisir une question');
       return;
     }
 
+    if (newQuestion.length > 500) {
+      console.log('Validation failed: question too long');
+      toast.error('La question ne doit pas dépasser 500 caractères');
+      return;
+    }
+
     if (!panel?.id) {
+      console.error('Panel ID missing:', panel);
       toast.error('Erreur: Panel non défini');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      console.log('Submitting question to Supabase:', {
+        content: newQuestion.trim(),
+        panel_id: panel.id,
+        is_anonymous: true,
+        length: newQuestion.length
+      });
+
+      const { data, error } = await supabase
         .from('questions')
         .insert({
           content: newQuestion.trim(),
           panel_id: panel.id,
-          is_anonymous: isAnonymous,
+          is_anonymous: true,
           is_answered: false
+        })
+        .select()
+        .single();
+
+      console.log('Supabase response:', { data, error, status: error?.code });
+
+      if (error) {
+        console.error('Supabase error:', {
+          message: error.message,
+          code: error.code,
+          details: error.details
         });
+        throw error;
+      }
 
-      if (error) throw error;
-
+      console.log('Question submitted successfully:', data);
       setNewQuestion('');
       toast.success('Question envoyée avec succès! 🚀');
     } catch (error) {
       console.error('Error submitting question:', error);
-      toast.error('Erreur lors de l\'envoi de la question');
+      toast.error(`Erreur lors de l'envoi de la question: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -305,21 +333,22 @@ export default function Questions({ panel }: { panel?: Panel }) {
   }: { 
     id: 'recent' | 'answered' | 'unanswered'; 
     label: string; 
-    icon: any; 
+    icon: LucideIcon;
     count?: number;
   }) => (
     <Button
       variant={activeTab === id ? 'default' : 'outline'}
       size="sm"
       onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-2 ${
+      className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 min-w-0 ${
         activeTab === id ? 'bg-blue-600 text-white' : ''
       }`}
     >
-      <Icon className="h-4 w-4" />
-      {label}
+      <Icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+      <span className="hidden xs:inline sm:inline">{label}</span>
+      <span className="xs:hidden sm:hidden">{label.charAt(0)}</span>
       {count !== undefined && count > 0 && (
-        <Badge variant="secondary" className="ml-1">
+        <Badge variant="secondary" className="ml-1 text-xs min-w-[20px] h-4 px-1">
           {count}
         </Badge>
       )}
@@ -336,74 +365,44 @@ export default function Questions({ panel }: { panel?: Panel }) {
         } ${index < 3 ? 'animate-in slide-in-from-bottom duration-500' : ''}`}
         style={{ animationDelay: `${index * 100}ms` }}
       >
-        <CardContent className="p-6">
-          <div className="flex gap-4">
-            {/* Indicateur de statut */}
-            <div className="flex flex-col items-center space-y-2 min-w-[60px]">
-              <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                question.is_answered 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-orange-400 text-white'
-              }`}>
-                {question.is_answered ? (
-                  <CheckCircle2 className="h-3 w-3" />
-                ) : (
-                  <MessageSquare className="h-3 w-3" />
-                )}
-              </div>
-              
-              <div className="text-center">
-                <div className="text-xs text-gray-500">
-                  {new Date(question.created_at).toLocaleDateString('fr-FR', {
-                    day: '2-digit',
-                    month: 'short'
-                  })}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {new Date(question.created_at).toLocaleTimeString('fr-FR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Contenu de la question */}
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {question.is_answered && (
-                    <Badge variant="default" className="bg-green-100 text-green-700 border-green-200">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Répondue
-                    </Badge>
+        <CardContent className="p-3 sm:p-4 lg:p-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            {/* Indicateur de statut - Mobile: horizontal, Desktop: vertical */}
+            <div className="flex sm:flex-col items-center sm:items-center justify-between sm:justify-start space-x-2 sm:space-x-0 sm:space-y-2 min-w-0 sm:min-w-[60px]">
+              <div className="flex items-center gap-2 sm:flex-col sm:gap-2">
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  question.is_answered 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-orange-400 text-white'
+                }`}>
+                  {question.is_answered ? (
+                    <CheckCircle2 className="h-3 w-3" />
+                  ) : (
+                    <MessageSquare className="h-3 w-3" />
                   )}
-                  
-                  {isRecent && (
-                    <Badge variant="default" className="bg-blue-100 text-blue-700 border-blue-200">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      Nouvelle
-                    </Badge>
-                  )}
-                  
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    {question.is_anonymous ? (
-                      <>
-                        <UserX className="h-3 w-3" />
-                        Anonyme
-                      </>
-                    ) : (
-                      <>
-                        <User className="h-3 w-3" />
-                        Identifié
-                      </>
-                    )}
-                  </Badge>
                 </div>
+                
+                <div className="text-center">
+                  <div className="text-xs text-gray-500 whitespace-nowrap">
+                    {new Date(question.created_at).toLocaleDateString('fr-FR', {
+                      day: '2-digit',
+                      month: 'short'
+                    })}
+                  </div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap">
+                    {new Date(question.created_at).toLocaleTimeString('fr-FR', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
 
+              {/* Menu actions - visible sur mobile */}
+              <div className="sm:hidden">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -434,15 +433,90 @@ export default function Questions({ panel }: { panel?: Panel }) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+            </div>
 
-              <p className="text-gray-800 text-base leading-relaxed mb-3">
+            {/* Contenu de la question */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                  {question.is_answered && (
+                    <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 text-xs">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      <span className="hidden xs:inline">Répondue</span>
+                      <span className="xs:hidden">✓</span>
+                    </Badge>
+                  )}
+                  
+                  {isRecent && (
+                    <Badge variant="default" className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      <span className="hidden xs:inline">Nouvelle</span>
+                      <span className="xs:hidden">New</span>
+                    </Badge>
+                  )}
+                  
+                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                    {question.is_anonymous ? (
+                      <>
+                        <UserX className="h-3 w-3" />
+                        <span className="hidden xs:inline">Anonyme</span>
+                        <span className="xs:hidden">Anon</span>
+                      </>
+                    ) : (
+                      <>
+                        <User className="h-3 w-3" />
+                        <span className="hidden xs:inline">Identifié</span>
+                        <span className="xs:hidden">ID</span>
+                      </>
+                    )}
+                  </Badge>
+                </div>
+
+                {/* Menu actions - caché sur mobile, visible sur desktop */}
+                <div className="hidden sm:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir détails
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Reply className="h-4 w-4 mr-2" />
+                        Répondre
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => markAsAnswered(question.id, question.is_answered)}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        {question.is_answered ? 'Marquer non répondue' : 'Marquer comme répondue'}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-red-600"
+                        onClick={() => deleteQuestion(question.id)}
+                      >
+                        <Flag className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+
+              <p className="text-gray-800 text-sm sm:text-base leading-relaxed mb-3 break-words">
                 {question.content}
               </p>
 
-              <div className="flex items-center justify-between text-sm text-gray-500">
+              <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs sm:text-sm text-gray-500">
                 <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  <span>
+                  <Clock className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">
                     {new Date(question.created_at).toLocaleString('fr-FR', {
                       day: 'numeric',
                       month: 'short',
@@ -457,10 +531,11 @@ export default function Questions({ panel }: { panel?: Panel }) {
                     variant="outline"
                     size="sm"
                     onClick={() => markAsAnswered(question.id, false)}
-                    className="h-6 px-2 text-xs"
+                    className="h-6 px-2 text-xs whitespace-nowrap"
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Marquer répondue
+                    <span className="hidden xs:inline">Marquer répondue</span>
+                    <span className="xs:hidden">Répondue</span>
                   </Button>
                 )}
               </div>
@@ -473,73 +548,89 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-3 sm:p-6">
         <div className="flex flex-col items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-600">Connexion en temps réel...</p>
+          <p className="text-gray-600 text-sm sm:text-base text-center">Connexion en temps réel...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="max-w-6xl mx-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
       {/* Indicateur de connexion */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-sm text-gray-600">
+      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className="text-xs sm:text-sm text-gray-600">
             {isConnected ? 'Temps réel actif' : 'Connexion interrompue'}
           </span>
           {newQuestionCount > 0 && (
-            <Badge variant="default" className="bg-green-100 text-green-700 animate-pulse">
+            <Badge variant="default" className="bg-green-100 text-green-700 animate-pulse text-xs">
               +{newQuestionCount} nouvelle(s)
             </Badge>
           )}
         </div>
         
-        {newQuestionCount > 0 && (
+        <div className="flex items-center gap-2">
+          {newQuestionCount > 0 && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={scrollToBottom}
+              className="animate-bounce text-xs"
+            >
+              <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Voir les nouvelles</span>
+            </Button>
+          )}
+          
+          {/* Bouton de rechargement manuel */}
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={scrollToBottom}
-            className="animate-bounce"
+            onClick={() => {
+              setIsLoading(true);
+              window.location.reload();
+            }}
+            title="Recharger les questions"
+            className="px-2 sm:px-3"
           >
-            <ArrowDown className="h-4 w-4 mr-2" />
-            Voir les nouvelles
+            <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
-        )}
+        </div>
       </div>
 
       {/* En-tête avec statistiques */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <MessageSquare className="h-8 w-8 text-blue-600" />
-            Questions
-            <Badge variant="outline" className="text-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3 flex-wrap">
+            <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+            <span>Questions</span>
+            <Badge variant="outline" className="text-xs sm:text-sm">
               <Activity className="h-3 w-3 mr-1" />
               Live
             </Badge>
           </h1>
-          <p className="text-gray-600 mt-1">{panel?.title || 'Panel non défini'}</p>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base truncate">{panel?.title || 'Panel non défini'}</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-2 sm:gap-4 w-full lg:w-auto lg:min-w-[300px]">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+            <div className="text-lg sm:text-2xl font-bold text-blue-600">{stats.total}</div>
             <div className="text-xs text-gray-500">Total</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.answered}</div>
+            <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.answered}</div>
             <div className="text-xs text-gray-500">Répondues</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.unanswered}</div>
+            <div className="text-lg sm:text-2xl font-bold text-orange-600">{stats.unanswered}</div>
             <div className="text-xs text-gray-500">En attente</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.recent}</div>
+            <div className="text-lg sm:text-2xl font-bold text-purple-600">{stats.recent}</div>
             <div className="text-xs text-gray-500">Récentes</div>
           </div>
         </div>
@@ -547,29 +638,29 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
       {/* Formulaire de nouvelle question */}
       <Card className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5" />
-            Poser une question
-            <Badge variant="outline" className="bg-green-50 text-green-700">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span>Poser une question</span>
+            <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
               <Activity className="h-3 w-3 mr-1" />
               Temps réel
             </Badge>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Votre question apparaîtra instantanément à tous les participants
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="question">Votre question</Label>
+              <Label htmlFor="question" className="text-sm sm:text-base">Votre question</Label>
               <Textarea
                 id="question"
                 value={newQuestion}
                 onChange={(e) => setNewQuestion(e.target.value)}
                 placeholder="Posez votre question ici..."
-                className="mt-2 resize-none"
+                className="mt-2 resize-none text-sm sm:text-base"
                 rows={3}
                 required
               />
@@ -578,14 +669,14 @@ export default function Questions({ panel }: { panel?: Panel }) {
               </div>
             </div>
             
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 xs:gap-4">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="anonymous"
                   checked={isAnonymous}
                   onCheckedChange={setIsAnonymous}
                 />
-                <Label htmlFor="anonymous" className="flex items-center gap-2">
+                <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm cursor-pointer">
                   {isAnonymous ? <UserX className="h-4 w-4" /> : <User className="h-4 w-4" />}
                   Poser anonymement
                 </Label>
@@ -593,8 +684,9 @@ export default function Questions({ panel }: { panel?: Panel }) {
               
               <Button 
                 type="submit" 
-                disabled={isSubmitting || !newQuestion.trim() || newQuestion.length > 500}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                disabled={isSubmitting}
+                data-testid="submit-question-btn"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full xs:w-auto"
               >
                 {isSubmitting ? (
                   <RefreshCw className="animate-spin h-4 w-4" />
@@ -610,9 +702,10 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
       {/* Onglets et filtres */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex gap-2 flex-wrap">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* Onglets */}
+            <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-1">
               <TabButton 
                 id="recent" 
                 label="Récentes" 
@@ -633,25 +726,26 @@ export default function Questions({ panel }: { panel?: Panel }) {
               />
             </div>
 
-            <div className="flex gap-2 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
+            {/* Filtres */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Rechercher en temps réel..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-sm"
                 />
               </div>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <Filter className="h-4 w-4 mr-2" />
-                    Filtrer
+                    <span>Filtrer</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="w-56">
                   <DropdownMenuItem onClick={() => setFilterStatus('all')}>
                     Toutes les questions
                   </DropdownMenuItem>
@@ -669,18 +763,18 @@ export default function Questions({ panel }: { panel?: Panel }) {
       </Card>
 
       {/* Liste des questions */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {sortedQuestions.length === 0 ? (
           <Card>
-            <CardContent className="text-center py-12">
-              <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <CardContent className="text-center py-8 sm:py-12 px-4">
+              <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                 {searchTerm || filterStatus !== 'all' 
                   ? 'Aucune question trouvée' 
                   : 'Aucune question pour le moment'
                 }
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-sm sm:text-base text-gray-600 mb-4">
                 {searchTerm || filterStatus !== 'all'
                   ? 'Essayez de modifier vos critères de recherche'
                   : 'Soyez le premier à poser une question !'}
@@ -705,10 +799,10 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
       {/* Résumé des résultats filtrés */}
       {(searchTerm || filterStatus !== 'all') && sortedQuestions.length > 0 && (
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-xs sm:text-sm text-gray-500 px-4">
           {sortedQuestions.length} question(s) trouvée(s) sur {questions.length} au total
         </div>
       )}
     </div>
   );
-}
+};
