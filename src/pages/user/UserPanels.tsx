@@ -1078,35 +1078,41 @@ export function UserPanels() {
         )}
 
         {/* Modal de création/édition */}
+{/* Modal de création/édition - Version responsive */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <CardHeader>
-                <CardTitle>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <Card className="w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mx-2 sm:mx-4">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">
                   {editingPanelId ? "Modifier le panel" : "Créer un nouveau panel"}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm">
                   Remplissez les informations pour votre panel de discussion
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                {/* Informations principales */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Titre</Label>
+                    <Label htmlFor="title" className="text-sm font-medium">
+                      Titre <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="title"
                       value={panelForm.title}
                       onChange={(e) => setPanelForm({...panelForm, title: e.target.value})}
                       placeholder="Titre du panel"
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="category">Catégorie</Label>
+                    <Label htmlFor="category" className="text-sm font-medium">Catégorie</Label>
                     <Select
                       value={panelForm.category}
                       onValueChange={(value) => setPanelForm({...panelForm, category: value})}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1114,129 +1120,252 @@ export function UserPanels() {
                         <SelectItem value="Business">Business</SelectItem>
                         <SelectItem value="Environnement">Environnement</SelectItem>
                         <SelectItem value="Santé">Santé</SelectItem>
+                        <SelectItem value="Éducation">Éducation</SelectItem>
+                        <SelectItem value="Sport">Sport</SelectItem>
+                        <SelectItem value="Culture">Culture</SelectItem>
+                        <SelectItem value="Autre">Autre</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description" className="text-sm font-medium">
+                    Description <span className="text-red-500">*</span>
+                  </Label>
                   <Textarea
                     id="description"
                     value={panelForm.description}
                     onChange={(e) => setPanelForm({...panelForm, description: e.target.value})}
-                    placeholder="Décrivez votre panel..."
+                    placeholder="Décrivez votre panel en quelques phrases..."
                     rows={3}
+                    className="w-full resize-none"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Date et heure */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
+                    <Label htmlFor="date" className="text-sm font-medium">
+                      Date <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="date"
                       type="date"
                       value={panelForm.date}
                       onChange={(e) => setPanelForm({...panelForm, date: e.target.value})}
+                      className="w-full"
+                      min={new Date().toISOString().split('T')[0]}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="time">Heure</Label>
+                    <Label htmlFor="time" className="text-sm font-medium">
+                      Heure <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="time"
                       type="time"
                       value={panelForm.time}
                       onChange={(e) => setPanelForm({...panelForm, time: e.target.value})}
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Durée (minutes)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      value={panelForm.duration}
-                      onChange={(e) => setPanelForm({...panelForm, duration: parseInt(e.target.value) || 60})}
-                    />
+                    <Label htmlFor="duration" className="text-sm font-medium">Durée</Label>
+                    <Select
+                      value={panelForm.duration.toString()}
+                      onValueChange={(value) => setPanelForm({...panelForm, duration: parseInt(value)})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                        <SelectItem value="45">45 minutes</SelectItem>
+                        <SelectItem value="60">1 heure</SelectItem>
+                        <SelectItem value="90">1h30</SelectItem>
+                        <SelectItem value="120">2 heures</SelectItem>
+                        <SelectItem value="180">3 heures</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="participants_limit" className="text-sm font-medium">Participants max</Label>
+                    <Select
+                      value={panelForm.participants_limit.toString()}
+                      onValueChange={(value) => setPanelForm({...panelForm, participants_limit: parseInt(value)})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10 personnes</SelectItem>
+                        <SelectItem value="20">20 personnes</SelectItem>
+                        <SelectItem value="30">30 personnes</SelectItem>
+                        <SelectItem value="50">50 personnes</SelectItem>
+                        <SelectItem value="100">100 personnes</SelectItem>
+                        <SelectItem value="200">200 personnes</SelectItem>
+                        <SelectItem value="500">500 personnes</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="participants_limit">Limite de participants</Label>
-                  <Input
-                    id="participants_limit"
-                    type="number"
-                    value={panelForm.participants_limit}
-                    onChange={(e) => setPanelForm({...panelForm, participants_limit: parseInt(e.target.value) || 30})}
-                  />
-                </div>
-
-                {/* Panélistes */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Panélistes</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={addPanelist}>
+                {/* Section Panélistes */}
+                <div className="space-y-4 border-t pt-4 sm:pt-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <Label className="text-base font-semibold">Panélistes</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Ajoutez les intervenants de votre panel
+                      </p>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={addPanelist}
+                      className="w-full sm:w-auto"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
-                      Ajouter
+                      Ajouter un panéliste
                     </Button>
                   </div>
                   
                   <div className="space-y-4">
                     {panelForm.panelists.map((panelist, index) => (
-                      <Card key={index} className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Input
-                            placeholder="Nom complet"
-                            value={panelist.name}
-                            onChange={(e) => handlePanelistChange(index, 'name', e.target.value)}
-                          />
-                          <Input
-                            placeholder="Email"
-                            type="email"
-                            value={panelist.email}
-                            onChange={(e) => handlePanelistChange(index, 'email', e.target.value)}
-                          />
-                          <Input
-                            placeholder="Titre/Fonction"
-                            value={panelist.title}
-                            onChange={(e) => handlePanelistChange(index, 'title', e.target.value)}
-                          />
-                          <Input
-                            placeholder="Durée (min)"
-                            type="number"
-                            value={panelist.duration}
-                            onChange={(e) => handlePanelistChange(index, 'duration', parseInt(e.target.value) || 15)}
-                          />
-                          <div className="md:col-span-2">
+                      <Card key={index} className="p-3 sm:p-4 border-2 border-dashed border-gray-200 hover:border-gray-300 transition-colors">
+                        <div className="space-y-3">
+                          {/* En-tête de la carte panéliste */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                {index + 1}
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">
+                                Panéliste {index + 1}
+                              </span>
+                            </div>
+                            {panelForm.panelists.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePanelist(index)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* Formulaire panéliste */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium text-gray-600">
+                                Nom complet <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                placeholder="Ex: Jean Dupont"
+                                value={panelist.name}
+                                onChange={(e) => handlePanelistChange(index, 'name', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium text-gray-600">
+                                Email <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                placeholder="jean@exemple.com"
+                                type="email"
+                                value={panelist.email}
+                                onChange={(e) => handlePanelistChange(index, 'email', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium text-gray-600">Titre/Fonction</Label>
+                              <Input
+                                placeholder="Ex: Directeur Marketing"
+                                value={panelist.title}
+                                onChange={(e) => handlePanelistChange(index, 'title', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium text-gray-600">Temps d'intervention</Label>
+                              <Select
+                                value={panelist.duration.toString()}
+                                onValueChange={(value) => handlePanelistChange(index, 'duration', parseInt(value))}
+                              >
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="5">5 minutes</SelectItem>
+                                  <SelectItem value="10">10 minutes</SelectItem>
+                                  <SelectItem value="15">15 minutes</SelectItem>
+                                  <SelectItem value="20">20 minutes</SelectItem>
+                                  <SelectItem value="30">30 minutes</SelectItem>
+                                  <SelectItem value="45">45 minutes</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-gray-600">Sujet à aborder</Label>
                             <Input
-                              placeholder="Sujet à aborder"
+                              placeholder="Ex: Les tendances du marketing digital en 2025"
                               value={panelist.topic}
                               onChange={(e) => handlePanelistChange(index, 'topic', e.target.value)}
+                              className="text-sm"
                             />
                           </div>
                         </div>
-                        {panelForm.panelists.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="mt-4"
-                            onClick={() => removePanelist(index)}
-                          >
-                            Supprimer
-                          </Button>
-                        )}
                       </Card>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                {/* Actions */}
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setEditingPanelId(null);
+                    }}
+                    className="w-full sm:w-auto"
+                  >
                     Annuler
                   </Button>
-                  <Button onClick={handleSubmit}>
-                    {editingPanelId ? "Mettre à jour" : "Créer le panel"}
+                  <Button 
+                    onClick={handleSubmit}
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                    disabled={!panelForm.title || !panelForm.description || !panelForm.date || !panelForm.time}
+                  >
+                    {editingPanelId ? "Mettre à jour le panel" : "Créer le panel"}
                   </Button>
+                </div>
+
+                {/* Aide/Instructions */}
+                <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-start gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-blue-600 text-xs">💡</span>
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Conseils pour créer un panel réussi :</p>
+                      <ul className="space-y-1 text-xs">
+                        <li>• Choisissez un titre accrocheur et descriptif</li>
+                        <li>• Ajoutez une description claire du sujet</li>
+                        <li>• Invitez des panélistes complémentaires</li>
+                        <li>• Prévoyez du temps pour les questions du public</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
