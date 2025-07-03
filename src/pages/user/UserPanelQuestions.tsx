@@ -60,6 +60,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Panelist } from "@/types";
+import QuestionService from "@/services/QuestionService";
 
 interface Question {
   id: string;
@@ -147,6 +148,15 @@ export default function UserPanelQuestions() {
       supabase.removeChannel(subscription);
     };
   }, [panelId, refetch]);
+
+  const handleToggleAnswered = async (q: Question) => {
+    try {
+      await QuestionService.updateAnswered(q.id, !q.is_answered);
+      refetch();
+    } catch (err) {
+      logger.error('Failed to update question', err);
+    }
+  };
 
   // Filtrage et tri des questions
   const filteredQuestions = questions.filter(question => {
@@ -467,6 +477,17 @@ export default function UserPanelQuestions() {
                       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-green-600">
                         <Eye className="h-3 w-3 mr-1" />
                         Voir détails
+                      </Button>
+                    )}
+                    {user?.email === question.panelist_email && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => handleToggleAnswered(question)}
+                        data-testid="toggle-answered-btn"
+                      >
+                        {question.is_answered ? 'Marquer non répondue' : 'Marquer répondue'}
                       </Button>
                     )}
                   </div>
