@@ -3,6 +3,7 @@ import { LayoutDashboard, PanelLeft, Calendar, MessageSquare, FileText, Settings
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { logger } from "@/lib/logger";
 
 const features = [
   {
@@ -81,7 +82,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   const handleNavigation = (path) => {
-    console.log(`Navigating to: ${path}`);
+    logger.debug(`Navigating to: ${path}`);
     navigate(path);
   };
 

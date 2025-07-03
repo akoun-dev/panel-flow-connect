@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 
 export function RegisterForm() {
@@ -36,7 +37,7 @@ export function RegisterForm() {
 
     try {
       // 1. Création du compte auth
-      console.log('[DEBUG] Attempting signUp with:', formData.email);
+      logger.debug('[DEBUG] Attempting signUp with:', formData.email);
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -53,10 +54,10 @@ export function RegisterForm() {
         console.error('[DEBUG] Auth error:', authError);
         throw authError;
       }
-      console.log('[DEBUG] Auth success:', authData);
+      logger.debug('[DEBUG] Auth success:', authData);
 
       // 2. Création du profil dans public.users
-      console.log('[DEBUG] Attempting user profile creation');
+      logger.debug('[DEBUG] Attempting user profile creation');
       const { data: profileData, error: profileError } = await supabase
         .from('users')
         .upsert({
@@ -73,7 +74,7 @@ export function RegisterForm() {
         console.error('[DEBUG] Profile error:', profileError);
         throw profileError;
       }
-      console.log('[DEBUG] Profile created:', profileData);
+      logger.debug('[DEBUG] Profile created:', profileData);
 
 
       toast.success("Inscription réussie! Vérifiez votre email pour confirmer votre compte.");

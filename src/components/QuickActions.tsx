@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Users, Settings, BarChart3 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const quickActions = [
   {
@@ -50,7 +51,7 @@ export function QuickActions() {
               key={index}
               variant="outline"
               className={`h-auto p-4 justify-start hover-lift ${action.color} hover:text-white transition-all duration-200`}
-              onClick={() => console.log(`Action: ${action.action}`)}
+              onClick={() => logger.debug(`Action: ${action.action}`)}
             >
               <action.icon className="h-5 w-5 mr-3" />
               <div className="text-left">

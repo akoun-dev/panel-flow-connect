@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Mail, Clock, Check, X, Calendar, User, Eye, MapPin, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
@@ -46,7 +47,7 @@ export function UserInvitation() {
       }
       
       try {
-        console.log('Email utilisateur:', user?.email); // Debug
+        logger.debug('Email utilisateur:', user?.email); // Debug
         if (!user?.email) {
           throw new Error('Email utilisateur non disponible');
         }
@@ -58,20 +59,20 @@ export function UserInvitation() {
           .eq('panelist_email', user.email)
           .order('created_at', { ascending: false });
 
-        console.log('Invitations de base:', invitations);
+        logger.debug('Invitations de base:', invitations);
         if (inviteError) throw inviteError;
         if (!invitations || invitations.length === 0) return [];
 
         // 2. Vérifier et récupérer les panels
         const panelIds = invitations.map(inv => inv.panel_id);
-        console.log('IDs panels recherchés:', panelIds);
+        logger.debug('IDs panels recherchés:', panelIds);
         
         // Utilisation de la fonction get_user_panels qui filtre déjà les panels accessibles
         const { data: panels, error: panelError } = await supabase
           .rpc('get_user_panels')
           .select('id, title, description, date, time, duration, category, theme, moderator_name, moderator_email, participants_limit, tags');
 
-        console.log('Panels accessibles:', {
+        logger.debug('Panels accessibles:', {
           data: panels,
           error: panelError ? {
             message: panelError.message,
@@ -105,7 +106,7 @@ export function UserInvitation() {
           };
         }) as PanelInvitation[];
 
-        console.log('Invitations transformées:', transformedData);
+        logger.debug('Invitations transformées:', transformedData);
         return transformedData;
       } catch (error) {
         console.error('Erreur chargement invitations:', error);

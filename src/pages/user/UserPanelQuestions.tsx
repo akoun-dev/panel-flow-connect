@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from "@/lib/supabase"
+import { logger } from "@/lib/logger"
 import { useUser } from "@/hooks/useUser"
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -129,12 +130,12 @@ export default function UserPanelQuestions() {
           filter: `panel_id=eq.${panelId}`
         },
         () => {
-          console.log('Changement détecté, déclenchement re-fetch...');
+          logger.debug('Changement détecté, déclenchement re-fetch...');
           refetch();
         }
       )
       .subscribe((status, err) => {
-        console.log('Statut abonnement:', status);
+        logger.debug('Statut abonnement:', status);
         setRealtimeStatus(status);
         if (err) {
           console.error('Erreur abonnement:', err);

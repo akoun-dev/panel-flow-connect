@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { PanelService } from "@/services/panelService";
+import { logger } from "@/lib/logger";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "react-hot-toast";
 import { Input } from "@/components/ui/input";
@@ -146,7 +147,7 @@ export function UserDashboard() {
 
     // Fonction pour ouvrir le modal de création
     const handleNewPanel = () => {
-        console.log("Opening new panel modal...");
+        logger.debug("Opening new panel modal...");
         resetForm();
         setIsModalOpen(true);
     };
@@ -159,13 +160,13 @@ export function UserDashboard() {
             return;
         }
         
-        console.log("Managing panel:", panel);
+        logger.debug("Managing panel:", panel);
         setManagePanelModal({ open: true, panel, mode: 'view' });
     };
 
     // Fonction pour éditer un panel
     const handleEditPanel = async (panel: Panel) => {
-        console.log("Editing panel:", panel);
+        logger.debug("Editing panel:", panel);
         
         try {
             // Récupérer les données complètes du panel depuis la base de données
@@ -350,12 +351,12 @@ export function UserDashboard() {
 
             if (editingPanelId) {
                 // Mode édition : mettre à jour le panel existant
-                console.log("Updating panel with ID:", editingPanelId, "Data:", panelData);
+                logger.debug("Updating panel with ID:", editingPanelId, "Data:", panelData);
                 await PanelService.updatePanel(editingPanelId, panelData);
                 toast.success("Panel mis à jour avec succès!");
             } else {
                 // Mode création : créer un nouveau panel
-                console.log("Creating new panel with data:", panelData);
+                logger.debug("Creating new panel with data:", panelData);
                 await PanelService.createPanel(panelData);
                 toast.success("Panel créé avec succès!");
             }
