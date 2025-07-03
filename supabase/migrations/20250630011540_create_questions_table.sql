@@ -60,3 +60,18 @@ ON responses
 FOR INSERT
 TO authenticated
 WITH CHECK (true);
+
+-- Autoriser la modification des réponses par leur auteur ou un admin
+CREATE POLICY "Responses can be updated by owner or admin"
+ON responses
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id OR auth.role() = 'admin')
+WITH CHECK (auth.uid() = user_id OR auth.role() = 'admin');
+
+-- Autoriser la suppression des réponses par leur auteur ou un admin
+CREATE POLICY "Responses can be deleted by owner or admin"
+ON responses
+FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id OR auth.role() = 'admin');
