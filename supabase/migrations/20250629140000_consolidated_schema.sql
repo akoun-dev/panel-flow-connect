@@ -310,8 +310,3 @@ GRANT EXECUTE ON FUNCTION user_can_access_panel(UUID) TO authenticated;
 
 -- 14. Permissions
 GRANT EXECUTE ON FUNCTION get_user_invitations(text) TO authenticated;
-
-
-UPDATE public.panel_invitations 
-SET panelist_email = 'tmerguez1@gmail.com'
-WHERE panelist_email = 'tmerguez@gmail.com';

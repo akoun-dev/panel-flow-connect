@@ -13,3 +13,8 @@ SET user_id = panels.user_id
 FROM panels
 WHERE panels.id = panel_invitations.panel_id
   AND panel_invitations.user_id IS NULL;
+
+-- Fix mismatched panelist email
+UPDATE panel_invitations
+SET panelist_email = 'tmerguez1@gmail.com'
+WHERE panelist_email = 'tmerguez@gmail.com';
