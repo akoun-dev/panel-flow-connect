@@ -51,6 +51,7 @@ interface Question {
   content: string;
   panel_id: string;
   panelist_email?: string | null;
+  author_name?: string | null;
   is_anonymous: boolean;
   is_answered: boolean;
   created_at: string;
@@ -60,6 +61,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
   const { user } = useUser();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
+  const [authorName, setAuthorName] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [selectedPanelistEmail, setSelectedPanelistEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'recent' | 'answered' | 'unanswered'>('recent');
@@ -223,6 +225,11 @@ export default function Questions({ panel }: { panel?: Panel }) {
       return;
     }
 
+    if (!isAnonymous && !authorName.trim()) {
+      toast.error('Veuillez renseigner votre nom');
+      return;
+    }
+
     if (!panel?.id) {
       console.error('Panel ID missing:', panel);
       toast.error('Erreur: Panel non défini');
@@ -245,7 +252,8 @@ export default function Questions({ panel }: { panel?: Panel }) {
           panel_id: panel.id,
           is_anonymous: isAnonymous,
           is_answered: false,
-          panelist_email: selectedPanelistEmail || null
+          panelist_email: selectedPanelistEmail || null,
+          author_name: isAnonymous ? null : authorName.trim()
         })
         .select()
         .single();
@@ -263,6 +271,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
       logger.debug('Question submitted successfully:', data);
       setNewQuestion('');
+      setAuthorName('');
       toast.success('Question envoyée avec succès! 🚀');
     } catch (error) {
       console.error('Error submitting question:', error);
@@ -535,6 +544,10 @@ export default function Questions({ panel }: { panel?: Panel }) {
                 {question.content}
               </p>
 
+              {!question.is_anonymous && question.author_name && (
+                <p className="text-xs text-gray-500 mb-2">Par {question.author_name}</p>
+              )}
+
               <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs sm:text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3 flex-shrink-0" />
@@ -711,7 +724,20 @@ export default function Questions({ panel }: { panel?: Panel }) {
                 </Select>
               </div>
             )}
-            
+
+            {!isAnonymous && (
+              <div>
+                <Label htmlFor="authorName" className="text-sm sm:text-base">Votre nom</Label>
+                <Input
+                  id="authorName"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  className="mt-2"
+                  required
+                />
+              </div>
+            )}
+
             <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 xs:gap-4">
               <div className="flex items-center space-x-2">
                 <Switch
