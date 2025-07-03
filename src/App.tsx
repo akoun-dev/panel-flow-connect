@@ -37,6 +37,7 @@ import UserPlanning from "./pages/user/UserPlanning";
 import Questions from "./pages/Questions";
 import JoinPanel from "./pages/JoinPanel";
 import Projection from "./pages/Projection";
+import PollPage from "./pages/PollPage";
 
 import ProjectionWrapper from "@/components/ProjectionWrapper";
 
@@ -135,6 +136,7 @@ const App = () => {
             <Route path="/panel/:panelId/questions" element={<QuestionsWrapper />} />
             <Route path="/panel/:panelId/projection" element={<ProjectionWrapper />} />
             <Route path="/panel/join" element={<JoinPanel />} />
+            <Route path="/poll/:pollId" element={<PollPage />} />
             {/* Route 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
