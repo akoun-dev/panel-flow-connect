@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
+import { InvitePanelistsModal } from "@/components/panels/InvitePanelistsModal";
 
 const statusConfig = {
   draft: { 
@@ -88,6 +89,7 @@ export function UserPanels() {
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'participants'>('date');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPanelId, setEditingPanelId] = useState<string | null>(null);
+  const [inviteModal, setInviteModal] = useState<{open: boolean; panel: Panel | null}>({open: false, panel: null});
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [userProfile, setUserProfile] = useState<{
     first_name?: string;
@@ -387,14 +389,8 @@ export function UserPanels() {
   };
 
   // Fonction pour inviter les panélistes (similaire à UserDashboard)
-  const handleInvitePanelists = async (panel: Panel) => {
-    try {
-      // Cette fonction nécessiterait l'accès aux données complètes du panel
-      toast("Fonctionnalité d'invitation en cours de développement");
-    } catch (error) {
-      console.error("Error inviting panelists:", error);
-      toast.error("Erreur lors de l'envoi des invitations");
-    }
+  const handleInvitePanelists = (panel: Panel) => {
+    setInviteModal({ open: true, panel });
   };
 
   // Fonction pour changer le statut d'un panel (similaire à UserDashboard)
@@ -1371,6 +1367,11 @@ export function UserPanels() {
           </div>
         )}
       </div>
+      <InvitePanelistsModal
+        open={inviteModal.open}
+        panel={inviteModal.panel}
+        onClose={() => setInviteModal({ open: false, panel: null })}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/lib/supabase";
+import { InvitePanelistsModal } from "@/components/panels/InvitePanelistsModal";
 
 interface Panel {
   id: string;
@@ -51,6 +52,7 @@ export function UserDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingPanelId, setEditingPanelId] = useState<string | null>(null);
+    const [inviteModal, setInviteModal] = useState<{open: boolean; panel: Panel | null}>({open: false, panel: null});
     const [userProfile, setUserProfile] = useState<{
         first_name?: string;
         last_name?: string;
@@ -253,14 +255,8 @@ export function UserDashboard() {
     };
 
     // Fonction pour inviter les panélistes
-    const handleInvitePanelists = async (panel: Panel) => {
-        try {
-            // Cette fonction nécessiterait l'accès aux données complètes du panel
-            toast("Fonctionnalité d'invitation en cours de développement");
-        } catch (error) {
-            console.error("Error inviting panelists:", error);
-            toast.error("Erreur lors de l'envoi des invitations");
-        }
+    const handleInvitePanelists = (panel: Panel) => {
+        setInviteModal({ open: true, panel });
     };
 
     // Fonction pour fermer le modal
@@ -1199,6 +1195,11 @@ export function UserDashboard() {
                     </Card>
                 </div>
             )}
+            <InvitePanelistsModal
+                open={inviteModal.open}
+                panel={inviteModal.panel}
+                onClose={() => setInviteModal({ open: false, panel: null })}
+            />
         </>
     );
 }

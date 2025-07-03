@@ -122,6 +122,10 @@ This project is built with:
 ### Sondages en temps réel
 Les modérateurs peuvent créer des sondages pendant une session. Les participants votent instantanément et les résultats se mettent à jour sans rechargement grâce à Supabase Realtime.
 
+## Système d'invitation
+
+L'organisateur peut inviter des participants en saisissant leurs adresses e‑mail depuis la gestion d'un panel. Chaque invitation génère un lien unique de la forme `/panel/join?token=...`. Lorsque ce lien est visité, l'invitation est validée et le participant est redirigé vers la page des panels.
+
 ## Recent Updates
 
 ### Home Page Refactoring (28/06/2025)

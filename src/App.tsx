@@ -35,6 +35,7 @@ import UserPanelQuestions from "./pages/user/UserPanelQuestions";
 import QuestionsWrapper from "@/components/QuestionsWrapper";
 import UserPlanning from "./pages/user/UserPlanning";
 import Questions from "./pages/Questions";
+import JoinPanel from "./pages/JoinPanel";
 
 import ProjectionWrapper from "@/components/ProjectionWrapper";
 
@@ -132,6 +133,7 @@ const App = () => {
             {/* Routes publiques pour les panels */}
             <Route path="/panel/:panelId/questions" element={<QuestionsWrapper />} />
             <Route path="/panel/:panelId/projection" element={<ProjectionWrapper />} />
+            <Route path="/panel/join" element={<JoinPanel />} />
             {/* Route 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
