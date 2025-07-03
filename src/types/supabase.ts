@@ -145,6 +145,7 @@ export type Database = {
           is_answered: boolean | null
           created_at: string
           panelist_email: string | null
+          author_name: string | null
         }
         Insert: {
           id?: string
@@ -154,6 +155,7 @@ export type Database = {
           is_answered?: boolean | null
           created_at?: string
           panelist_email?: string | null
+          author_name?: string | null
         }
         Update: {
           id?: string
@@ -163,6 +165,7 @@ export type Database = {
           is_answered?: boolean | null
           created_at?: string
           panelist_email?: string | null
+          author_name?: string | null
         }
         Relationships: [
           {
