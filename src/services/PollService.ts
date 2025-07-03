@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Poll } from '@/types/poll';
+import type { TablesInsert } from '@/types/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 class PollService {
@@ -8,13 +9,13 @@ class PollService {
   static async createPoll(panelId: string, question: string, options: string[]): Promise<Poll> {
     const { data: poll, error } = await supabase
       .from('polls')
-      .insert({ panel_id: panelId, question })
+      .insert<TablesInsert<'polls'>>({ panel_id: panelId, question })
       .select()
       .single();
     if (error || !poll) throw error;
 
     if (options.length) {
-      const rows = options.map(text => ({ poll_id: poll.id, text }));
+      const rows: TablesInsert<'poll_options'>[] = options.map(text => ({ poll_id: poll.id, text }));
       const { error: optErr } = await supabase.from('poll_options').insert(rows);
       if (optErr) throw optErr;
     }
@@ -24,11 +25,12 @@ class PollService {
 
   static async vote(pollId: string, optionId: string) {
     const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('poll_votes').insert({
+    const vote: TablesInsert<'poll_votes'> = {
       poll_id: pollId,
       option_id: optionId,
       user_id: user?.id ?? null
-    });
+    };
+    const { error } = await supabase.from('poll_votes').insert(vote);
     if (error) throw error;
   }
 
