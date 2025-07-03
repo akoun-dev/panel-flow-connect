@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/lib/supabase";
 import type { LucideIcon } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
-import { Panel } from '../types';
+import { Panel, Panelist } from '../types';
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,12 +36,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Interface basée EXACTEMENT sur votre schéma
 interface Question {
   id: string;
   content: string;
   panel_id: string;
+  panelist_email?: string | null;
   is_anonymous: boolean;
   is_answered: boolean;
   created_at: string;
@@ -52,6 +60,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const [selectedPanelistEmail, setSelectedPanelistEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'recent' | 'answered' | 'unanswered'>('recent');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,6 +71,16 @@ export default function Questions({ panel }: { panel?: Panel }) {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const questionsEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (
+      panel?.panelists &&
+      (panel.panelists as Panelist[]).length > 0 &&
+      !selectedPanelistEmail
+    ) {
+      setSelectedPanelistEmail((panel.panelists as Panelist[])[0].email);
+    }
+  }, [panel, selectedPanelistEmail]);
 
   // Charger les questions initiales et configurer REALTIME
   useEffect(() => {
@@ -223,8 +242,9 @@ export default function Questions({ panel }: { panel?: Panel }) {
         .insert({
           content: newQuestion.trim(),
           panel_id: panel.id,
-          is_anonymous: true,
-          is_answered: false
+          is_anonymous: isAnonymous,
+          is_answered: false,
+          panelist_email: selectedPanelistEmail || null
         })
         .select()
         .single();
@@ -434,6 +454,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
                 </DropdownMenu>
               </div>
             </div>
+
 
             {/* Contenu de la question */}
             <div className="flex-1 min-w-0">
@@ -668,6 +689,27 @@ export default function Questions({ panel }: { panel?: Panel }) {
                 {newQuestion.length}/500 caractères
               </div>
             </div>
+
+            {panel?.panelists && (panel.panelists as Panelist[]).length > 0 && (
+              <div>
+                <Label htmlFor="panelist" className="text-sm sm:text-base">Paneliste</Label>
+                <Select
+                  value={selectedPanelistEmail}
+                  onValueChange={setSelectedPanelistEmail}
+                >
+                  <SelectTrigger id="panelist" className="mt-2">
+                    <SelectValue placeholder="Choisir un paneliste" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(panel.panelists as Panelist[]).map((p: Panelist) => (
+                      <SelectItem key={p.email} value={p.email}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 xs:gap-4">
               <div className="flex items-center space-x-2">
