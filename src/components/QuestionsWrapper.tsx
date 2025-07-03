@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import Questions from '../pages/Questions';
 import { Panel } from '../types';
+import { PanelInfoHeader } from './panels/PanelInfoHeader';
 
 export default function QuestionsWrapper() {
   const { panelId } = useParams();
@@ -35,5 +36,10 @@ export default function QuestionsWrapper() {
   if (loading) return <div>Chargement...</div>;
   if (!panel) return <div>+</div>;
 
-  return <Questions panel={panel} />;
+  return (
+    <div className="p-4">
+      <PanelInfoHeader panel={panel} />
+      <Questions panel={panel} />
+    </div>
+  );
 }
