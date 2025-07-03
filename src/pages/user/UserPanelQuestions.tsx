@@ -59,7 +59,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Panelist } from "@/types";
+import { Panelist, Poll } from "@/types";
+import { PollCreator } from '@/components/polls/PollCreator';
+import { PollViewer } from '@/components/polls/PollViewer';
 
 interface Question {
   id: string;
@@ -83,20 +85,37 @@ export default function UserPanelQuestions() {
   const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
   const [panelists, setPanelists] = useState<Panelist[]>([]);
   const [panelistFilter, setPanelistFilter] = useState<string>('all');
+  const [panelOwnerId, setPanelOwnerId] = useState<string>('');
+  const [moderatorEmail, setModeratorEmail] = useState<string>('');
+  const [polls, setPolls] = useState<Poll[]>([]);
   const { user } = useUser();
+  const isPanelAdmin =
+    !!user && (user.id === panelOwnerId || user.email === moderatorEmail);
   
   useEffect(() => {
     const fetchPanelTitle = async () => {
       if (!panelId) return;
       const { data } = await supabase
         .from('panels')
-        .select('title, description, created_at, panelists')
+        .select('title, description, created_at, panelists, user_id, moderator_email')
         .eq('id', panelId)
         .single();
       setPanelTitle(data?.title || '');
       setPanelists((data?.panelists as Panelist[]) || []);
+      setPanelOwnerId(data?.user_id || '');
+      setModeratorEmail(data?.moderator_email || '');
+    };
+    const fetchPolls = async () => {
+      if (!panelId) return;
+      const { data, error } = await supabase
+        .from('polls')
+        .select('id, panel_id, question, created_at')
+        .eq('panel_id', panelId)
+        .order('created_at', { ascending: false });
+      if (!error && data) setPolls(data as Poll[]);
     };
     fetchPanelTitle();
+    fetchPolls();
   }, [panelId]);
 
   const { data: questions = [], isLoading, error, refetch } = useQuery<Question[]>({
@@ -628,6 +647,41 @@ export default function UserPanelQuestions() {
           color="text-gray-600"
         />
       </motion.div>
+
+      {isPanelAdmin && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Créer un sondage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PollCreator panelId={panelId!} onCreated={() => {
+                // reload polls
+                supabase
+                  .from('polls')
+                  .select('id, panel_id, question, created_at')
+                  .eq('panel_id', panelId!)
+                  .order('created_at', { ascending: false })
+                  .then(({ data, error }) => {
+                    if (!error && data) setPolls(data as Poll[]);
+                  });
+              }} />
+            </CardContent>
+          </Card>
+
+          {polls.length > 0 && (
+            <div className="mt-6 space-y-4">
+              {polls.map((p) => (
+                <Card key={p.id}>
+                  <CardContent>
+                    <PollViewer pollId={p.id} />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Controls */}
       <motion.div
