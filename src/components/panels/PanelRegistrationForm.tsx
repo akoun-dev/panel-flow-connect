@@ -6,9 +6,12 @@ import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useState } from 'react'
 import { Panel, Panelist } from '@/types/panel'
+import { PanelService } from '@/services/panelService'
+import { useUser } from '@/hooks/useUser'
 
 export function PanelRegistrationForm() {
   const { register, handleSubmit, formState: { errors } } = useForm<Panel>()
+  const { user } = useUser()
   const [panelists, setPanelists] = useState<Panelist[]>([])
   const [newPanelist, setNewPanelist] = useState<Panelist>({
     name: '',
@@ -21,13 +24,17 @@ export function PanelRegistrationForm() {
     bio: ''
   })
 
-  const onSubmit = (data: Panel) => {
+  const onSubmit = async (data: Panel) => {
     const completeData = {
       ...data,
-      panelists
+      panelists,
+      user_id: user?.id || '',
+      moderator_name: '',
+      moderator_email: '',
+      participants_limit: data.participants_limit || 0
     }
-    console.log('Panel data:', completeData)
-    // TODO: Submit to backend
+
+    await PanelService.createPanel(completeData)
   }
 
   const addPanelist = () => {
@@ -74,6 +81,22 @@ export function PanelRegistrationForm() {
                 {...register('date', { required: 'Ce champ est requis' })}
               />
               {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="start_time">Début</Label>
+              <Input
+                id="start_time"
+                type="datetime-local"
+                {...register('start_time')}
+              />
+            </div>
+            <div>
+              <Label htmlFor="end_time">Fin</Label>
+              <Input
+                id="end_time"
+                type="datetime-local"
+                {...register('end_time')}
+              />
             </div>
           </div>
 
