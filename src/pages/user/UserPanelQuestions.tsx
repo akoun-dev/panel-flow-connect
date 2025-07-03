@@ -167,6 +167,15 @@ export default function UserPanelQuestions() {
     };
   }, [panelId, refetch]);
 
+  const handleToggleAnswered = async (q: Question) => {
+    try {
+      await QuestionService.updateAnswered(q.id, !q.is_answered);
+      refetch();
+    } catch (err) {
+      logger.error('Failed to update question', err);
+    }
+  };
+
   // Filtrage et tri des questions
   const filteredQuestions = questions.filter(question => {
     const matchesSearch = question.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -486,6 +495,17 @@ export default function UserPanelQuestions() {
                       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-green-600">
                         <Eye className="h-3 w-3 mr-1" />
                         Voir détails
+                      </Button>
+                    )}
+                    {user?.email === question.panelist_email && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => handleToggleAnswered(question)}
+                        data-testid="toggle-answered-btn"
+                      >
+                        {question.is_answered ? 'Marquer non répondue' : 'Marquer répondue'}
                       </Button>
                     )}
                   </div>
