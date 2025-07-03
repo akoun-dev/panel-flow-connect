@@ -144,5 +144,3 @@ et en utilisant **Share → Publish**.
 
 ### Domaine personnalisé
 
-Pour connecter un domaine, rendez-vous dans Project → Settings → Domains et
-cliquez sur *Connect Domain*. Plus d'informations :[Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
