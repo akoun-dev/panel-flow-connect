@@ -143,4 +143,3 @@ Vous pouvez aussi publier le projet sur Lovable en ouvrant
 et en utilisant **Share → Publish**.
 
 ### Domaine personnalisé
-
