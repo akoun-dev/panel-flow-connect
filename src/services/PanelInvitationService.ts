@@ -198,9 +198,10 @@ class PanelInvitationService {
   }
 
   static async createInvitation(params: {
+    panel_id: string;
     panelist_email: string;
     user_id: string;
-  }): Promise<void> {
+  }): Promise<string> {
     // Validation de l'email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(params.panelist_email)) {
       throw new Error('Format d\'email invalide');
@@ -217,16 +218,20 @@ class PanelInvitationService {
       throw new Error('Cet email n\'est pas associé à un compte utilisateur');
     }
 
+    const token = crypto.randomUUID();
     const { error } = await supabase
       .from('panel_invitations')
       .insert({
+        panel_id: params.panel_id,
         panelist_email: params.panelist_email,
         user_id: params.user_id,
+        unique_token: token,
         status: 'pending',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
 
     if (error) throw error;
+    return `${window.location.origin}/panel/join?token=${token}`;
   }
 }
 
