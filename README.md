@@ -117,6 +117,10 @@ This project is built with:
 - Thème sombre/clair (optionnel)
 - Navigation fluide
 - Performances optimisées
+- Sondages en temps réel pour interroger les participants durant les panels
+
+### Sondages en temps réel
+Les modérateurs peuvent créer des sondages pendant une session. Les participants votent instantanément et les résultats se mettent à jour sans rechargement grâce à Supabase Realtime.
 
 ## Recent Updates
 
