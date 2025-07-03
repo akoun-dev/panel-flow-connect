@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, Users, MapPin, Video, User, Play, MessageSquare } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { useToast } from "@/components/ui/use-toast"
 import PanelInvitationService from "@/services/PanelInvitationService"
 
@@ -32,6 +32,8 @@ interface Panel {
 export default function UserSchedule() {
     const { user } = useUser()
     const { toast } = useToast()
+    const [searchParams] = useSearchParams()
+    const invitationId = searchParams.get('invitationId')
     const [panels, setPanels] = useState<Panel[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -500,7 +502,15 @@ export default function UserSchedule() {
                 </Card>
             )}
 
-            {/* TODO: Ajouter un bouton pour accepter une invitation */}
+            {invitationId && (
+                <div className="text-center mt-4">
+                    <Button
+                        onClick={() => handleAcceptInvitation(invitationId)}
+                    >
+                        Accepter l'invitation
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }
