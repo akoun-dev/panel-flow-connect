@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser"
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import type { LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
   MessageSquare, 
@@ -50,12 +51,21 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Panelist } from "@/types";
 
 interface Question {
   id: string;
   content: string;
   created_at: string;
   is_anonymous?: boolean;
+  panelist_email?: string | null;
   responses: Array<{content: string; created_at?: string}>;
   is_answered: boolean;
 }
@@ -69,6 +79,8 @@ export default function UserPanelQuestions() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'answered' | 'unanswered'>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'oldest' | 'answered'>('recent');
   const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
+  const [panelists, setPanelists] = useState<Panelist[]>([]);
+  const [panelistFilter, setPanelistFilter] = useState<string>('all');
   const { user } = useUser();
   
   useEffect(() => {
@@ -76,10 +88,11 @@ export default function UserPanelQuestions() {
       if (!panelId) return;
       const { data } = await supabase
         .from('panels')
-        .select('title, description, created_at')
+        .select('title, description, created_at, panelists')
         .eq('id', panelId)
         .single();
       setPanelTitle(data?.title || '');
+      setPanelists((data?.panelists as Panelist[]) || []);
     };
     fetchPanelTitle();
   }, [panelId]);
@@ -137,11 +150,12 @@ export default function UserPanelQuestions() {
   const filteredQuestions = questions.filter(question => {
     const matchesSearch = question.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          question.responses?.some(r => r.content.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesFilter = 
-      filterStatus === 'all' || 
+    const matchesFilter =
+      filterStatus === 'all' ||
       (filterStatus === 'answered' && question.is_answered) ||
       (filterStatus === 'unanswered' && !question.is_answered);
-    return matchesSearch && matchesFilter;
+    const matchesPanelist = panelistFilter === 'all' || question.panelist_email === panelistFilter;
+    return matchesSearch && matchesFilter && matchesPanelist;
   });
 
   const sortedQuestions = [...filteredQuestions].sort((a, b) => {
@@ -178,7 +192,7 @@ export default function UserPanelQuestions() {
   const stats = getAdvancedStats();
 
   const StatCard = ({ icon: Icon, label, value, color, subtitle }: {
-    icon: any;
+    icon: LucideIcon;
     label: string;
     value: string | number;
     color: string;
@@ -638,18 +652,37 @@ export default function UserPanelQuestions() {
                       Filtrer
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setFilterStatus('all')}>
-                      Toutes les questions
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterStatus('answered')}>
-                      Questions répondues
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterStatus('unanswered')}>
-                      Questions non répondues
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setFilterStatus('all')}>
+                    Toutes les questions
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilterStatus('answered')}>
+                    Questions répondues
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilterStatus('unanswered')}>
+                    Questions non répondues
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {panelists.length > 0 && (
+                <Select
+                  value={panelistFilter}
+                  onValueChange={setPanelistFilter}
+                >
+                  <SelectTrigger className="w-32" data-testid="panelist-filter">
+                    <SelectValue placeholder="Paneliste" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    {panelists.map((p) => (
+                      <SelectItem key={p.email} value={p.email}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

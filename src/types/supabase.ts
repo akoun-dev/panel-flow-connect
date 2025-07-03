@@ -136,6 +136,44 @@ export type Database = {
           },
         ]
       }
+      questions: {
+        Row: {
+          id: string
+          content: string
+          panel_id: string
+          is_anonymous: boolean | null
+          is_answered: boolean | null
+          created_at: string
+          panelist_email: string | null
+        }
+        Insert: {
+          id?: string
+          content: string
+          panel_id: string
+          is_anonymous?: boolean | null
+          is_answered?: boolean | null
+          created_at?: string
+          panelist_email?: string | null
+        }
+        Update: {
+          id?: string
+          content?: string
+          panel_id?: string
+          is_anonymous?: boolean | null
+          is_answered?: boolean | null
+          created_at?: string
+          panelist_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_panel_id_fkey"
+            columns: ["panel_id"]
+            isOneToOne: false
+            referencedRelation: "panels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string | null
