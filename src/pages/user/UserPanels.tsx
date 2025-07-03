@@ -1145,6 +1145,17 @@ export function UserPanels() {
                                           <Play className="h-4 w-4" />
                                           Projection
                                       </Button>
+
+                                      {/* <Button
+                                      variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                              window.location.href = `/panel/join`
+                                          }}
+                                          className="flex items-center gap-2"
+                                      >
+                                        Joindre le panel
+                                      </Button> */}
                                       <Button
                                           variant="outline"
                                           size="sm"
