@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 import { Panel, Panelist } from '@/types/panel';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -80,7 +81,7 @@ class PanelInvitationService {
   }
 
   static async acceptInvitation(invitationId: string, userId: string) {
-    console.log(`[acceptInvitation] Début acceptation invitation id=${invitationId} userId=${userId}`);
+    logger.debug(`[acceptInvitation] Début acceptation invitation id=${invitationId} userId=${userId}`);
 
     // Met à jour le statut de l'invitation en 'accepted'
     const { data: invitation, error: fetchError } = await supabase
@@ -93,7 +94,7 @@ class PanelInvitationService {
       console.error(`[acceptInvitation] Erreur récupération invitation: ${fetchError.message}`);
       throw new Error(`Erreur lors de la récupération de l'invitation: ${fetchError.message}`);
     }
-    console.log(`[acceptInvitation] Invitation récupérée:`, invitation);
+    logger.debug(`[acceptInvitation] Invitation récupérée:`, invitation);
 
     const { error: updateError } = await supabase
       .from('panel_invitations')
@@ -104,7 +105,7 @@ class PanelInvitationService {
       console.error(`[acceptInvitation] Erreur mise à jour invitation: ${updateError.message}`);
       throw new Error(`Erreur lors de la mise à jour de l'invitation: ${updateError.message}`);
     }
-    console.log(`[acceptInvitation] Invitation mise à jour en 'accepted'`);
+    logger.debug(`[acceptInvitation] Invitation mise à jour en 'accepted'`);
 
     // Récupérer les données du panel pour créer l'entrée dans user_planning
     const { data: panel, error: panelError } = await supabase
@@ -117,7 +118,7 @@ class PanelInvitationService {
       console.error(`[acceptInvitation] Erreur récupération panel: ${panelError.message}`);
       throw new Error(`Erreur lors de la récupération du panel: ${panelError.message}`);
     }
-    console.log(`[acceptInvitation] Panel récupéré:`, panel);
+    logger.debug(`[acceptInvitation] Panel récupéré:`, panel);
 
     // Créer l'entrée dans user_planning
     const { error: planningError } = await supabase
@@ -137,7 +138,7 @@ class PanelInvitationService {
       console.error(`[acceptInvitation] Erreur création planning: ${planningError.message}`);
       throw new Error(`Erreur lors de la création du planning: ${planningError.message}`);
     }
-    console.log(`[acceptInvitation] Entrée planning créée avec succès`);
+    logger.debug(`[acceptInvitation] Entrée planning créée avec succès`);
   }
 
   static generateUniqueLink(panelId: string, panelistId: string): string {
@@ -146,14 +147,14 @@ class PanelInvitationService {
   }
 
   static async getInvitationsByUser(email: string): Promise<PanelInvitation[]> {
-    console.log('[DEBUG] Recherche invitations pour email:', email);
+    logger.debug('[DEBUG] Recherche invitations pour email:', email);
     if (!email) {
       console.warn('[WARN] Email vide fourni à getInvitationsByUser');
       return [];
     }
 
-    console.log('[DEBUG] Exécution requête Supabase...');
-    console.log('[DEBUG] Exécution requête pour email:', email);
+    logger.debug('[DEBUG] Exécution requête Supabase...');
+    logger.debug('[DEBUG] Exécution requête pour email:', email);
     const { data, error, count } = await supabase
       .from('panel_invitations')
       .select(`
@@ -170,7 +171,7 @@ class PanelInvitationService {
       .eq('panelist_email', email)
       .order('created_at', { ascending: false });
 
-    console.log('[DEBUG] Résultat requête:', {
+    logger.debug('[DEBUG] Résultat requête:', {
       data,
       error,
       count,
@@ -184,16 +185,16 @@ class PanelInvitationService {
       .select('*')
       .eq('panelist_email', email)
       .limit(1);
-    console.log('[DEBUG] Test direct:', testQuery);
+    logger.debug('[DEBUG] Test direct:', testQuery);
 
-    console.log('[DEBUG] Résultat requête:', { data, error });
+    logger.debug('[DEBUG] Résultat requête:', { data, error });
     
     if (error) {
       console.error('[ERROR] Erreur fetching invitations:', error);
       throw new Error('Failed to load invitations');
     }
 
-    console.log('[DEBUG] Invitations trouvées:', data?.length || 0);
+    logger.debug('[DEBUG] Invitations trouvées:', data?.length || 0);
     return data || [];
   }
 

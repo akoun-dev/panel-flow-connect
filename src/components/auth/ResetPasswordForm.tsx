@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { logger } from "@/lib/logger";
 
 export function ResetPasswordForm() {
   const [email, setEmail] = useState("");
@@ -19,7 +20,7 @@ export function ResetPasswordForm() {
     // Simulation d'envoi d'email
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    console.log("Reset password for:", email);
+    logger.debug("Reset password for:", email);
     setIsEmailSent(true);
     setIsLoading(false);
   };

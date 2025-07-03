@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
 import type { LucideIcon } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import { Panel, Panelist } from '../types';
@@ -94,7 +95,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
     const fetchQuestions = async () => {
       try {
         setIsLoading(true);
-        console.log('Fetching questions for panel:', panel.id);
+        logger.debug('Fetching questions for panel:', panel.id);
         
         // Initial fetch
         const { data, error } = await supabase
@@ -103,7 +104,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
           .eq('panel_id', panel.id)
           .order('created_at', { ascending: false });
 
-        console.log('Questions response:', { data, error });
+        logger.debug('Questions response:', { data, error });
 
         if (error) throw error;
 
@@ -134,7 +135,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
           filter: `panel_id=eq.${panel.id}`
         },
         (payload) => {
-          console.log('New question:', payload.new);
+          logger.debug('New question:', payload.new);
           const newQuestion = payload.new as Question;
           setQuestions(prev => [newQuestion, ...prev]);
           setNewQuestionCount(prev => prev + 1);
@@ -152,7 +153,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
           filter: `panel_id=eq.${panel.id}`
         },
         (payload) => {
-          console.log('Question updated:', payload.new);
+          logger.debug('Question updated:', payload.new);
           setQuestions(prev => prev.map(q =>
             q.id === payload.new.id ? payload.new as Question : q
           ));
@@ -171,13 +172,13 @@ export default function Questions({ panel }: { panel?: Panel }) {
           filter: `panel_id=eq.${panel.id}`
         },
         (payload) => {
-          console.log('Question deleted:', payload.old);
+          logger.debug('Question deleted:', payload.old);
           setQuestions(prev => prev.filter(q => q.id !== payload.old.id));
           toast.error('Une question a été supprimée');
         }
       )
       .subscribe((status) => {
-        console.log('Questions subscription status:', status);
+        logger.debug('Questions subscription status:', status);
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
           toast.success('Connexion en temps réel établie! ⚡');
@@ -208,16 +209,16 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submit triggered', { newQuestion, panel });
+    logger.debug('Submit triggered', { newQuestion, panel });
     
     if (!newQuestion.trim()) {
-      console.log('Validation failed: empty question');
+      logger.debug('Validation failed: empty question');
       toast.error('Veuillez saisir une question');
       return;
     }
 
     if (newQuestion.length > 500) {
-      console.log('Validation failed: question too long');
+      logger.debug('Validation failed: question too long');
       toast.error('La question ne doit pas dépasser 500 caractères');
       return;
     }
@@ -230,7 +231,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
     setIsSubmitting(true);
     try {
-      console.log('Submitting question to Supabase:', {
+      logger.debug('Submitting question to Supabase:', {
         content: newQuestion.trim(),
         panel_id: panel.id,
         is_anonymous: true,
@@ -249,7 +250,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
         .select()
         .single();
 
-      console.log('Supabase response:', { data, error, status: error?.code });
+      logger.debug('Supabase response:', { data, error, status: error?.code });
 
       if (error) {
         console.error('Supabase error:', {
@@ -260,7 +261,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
         throw error;
       }
 
-      console.log('Question submitted successfully:', data);
+      logger.debug('Question submitted successfully:', data);
       setNewQuestion('');
       toast.success('Question envoyée avec succès! 🚀');
     } catch (error) {

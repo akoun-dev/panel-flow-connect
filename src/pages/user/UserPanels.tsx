@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
 import PanelInvitationService from "@/services/PanelInvitationService";
 import { PanelService } from "@/services/panelService";
 import type { Panel } from "@/types/panel";
@@ -291,13 +292,13 @@ export function UserPanels() {
 
   // Fonction pour gérer un panel (similaire à UserDashboard)
   const handleManagePanel = (panel: Panel) => {
-    console.log("Managing panel:", panel);
+    logger.debug("Managing panel:", panel);
     setManagePanelModal({ open: true, panel, mode: 'view' });
   };
 
   // Fonction pour éditer un panel (similaire à UserDashboard)
   const handleEditPanel = async (panel: Panel) => {
-    console.log("Editing panel:", panel);
+    logger.debug("Editing panel:", panel);
     
     try {
       // Récupérer les données complètes du panel depuis la base de données

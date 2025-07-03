@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
+import { logger } from "@/lib/logger"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import interactionPlugin from "@fullcalendar/interaction"
@@ -121,16 +122,16 @@ export default function UserPlanning() {
         const fetchAcceptedPanels = async () => {
             try {
                 setLoading(true)
-                console.log('[DEBUG] Starting to fetch panels...')
+                logger.debug('[DEBUG] Starting to fetch panels...')
                 
                 const authResult = await supabase.auth.getUser()
-                console.log('[DEBUG] Auth result:', authResult)
+                logger.debug('[DEBUG] Auth result:', authResult)
                 
                 const userId = authResult.data.user?.id
                 if (!userId) throw new Error("User ID not found")
-                console.log('[DEBUG] User ID:', userId)
+                logger.debug('[DEBUG] User ID:', userId)
 
-                console.log('[DEBUG] Building query...')
+                logger.debug('[DEBUG] Building query...')
                 const query = supabase
                     .from("user_planning")
                     .select(`
@@ -148,7 +149,7 @@ export default function UserPlanning() {
                     .eq("user_id", userId)
                     .order('date', { ascending: true, referencedTable: 'panels' })
 
-                console.log('[DEBUG] Executing query:', query)
+                logger.debug('[DEBUG] Executing query:', query)
                 const { data, error } = await query
 
                 if (error) {
@@ -156,9 +157,9 @@ export default function UserPlanning() {
                     throw error
                 }
                 
-                console.log('[DEBUG] Query successful, data:', data)
+                logger.debug('[DEBUG] Query successful, data:', data)
                 if (!data) {
-                    console.log('[DEBUG] No data returned')
+                    logger.debug('[DEBUG] No data returned')
                     return
                 }
 
