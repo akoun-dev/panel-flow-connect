@@ -31,6 +31,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS user_planning_updated_at ON public.user_planning;
 CREATE TRIGGER user_planning_updated_at
 BEFORE UPDATE ON public.user_planning
 FOR EACH ROW

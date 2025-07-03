@@ -44,6 +44,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS panel_questions_updated_at ON public.panel_questions;
 CREATE TRIGGER panel_questions_updated_at
 BEFORE UPDATE ON public.panel_questions
 FOR EACH ROW
