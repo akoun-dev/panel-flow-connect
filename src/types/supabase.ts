@@ -79,7 +79,6 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string | null
-          qr_code: string | null
         }
         Insert: {
           allocated_time?: number | null
@@ -103,7 +102,6 @@ export type Database = {
           title: string
           updated_at?: string
           user_id?: string | null
-          qr_code?: string | null
         }
         Update: {
           allocated_time?: number | null
@@ -127,7 +125,6 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string | null
-          qr_code?: string | null
         }
         Relationships: [
           {

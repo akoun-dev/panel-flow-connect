@@ -6,7 +6,7 @@ import { Download, Share2, Copy } from 'lucide-react';
 import { useToast } from '../ui/use-toast';
 
 interface PanelQRCodeProps {
-  panel: Panel & { qr_code?: string };
+  panel: Panel;
   size?: number;
   url?: string;
 }
@@ -17,15 +17,15 @@ export function PanelQRCode({ panel, size = 128, url }: PanelQRCodeProps) {
   
   const qrValue = useMemo(() => {
     if (url) return url;
-    if (panel.qr_code) return panel.qr_code;
-    
-    const { protocol, hostname, port } = window.location;
-    const baseUrl = port
-      ? `${protocol}//${hostname}:${port}`
-      : `${protocol}//${hostname}`;
-      
-    return `${baseUrl}/panel/${panel.id}/questions`;
-  }, [panel.id, panel.qr_code, url]);
+
+    if (panel.qr_code_url) {
+      return panel.qr_code_url.startsWith('http')
+        ? panel.qr_code_url
+        : `${window.location.origin}${panel.qr_code_url}`;
+    }
+
+    return `${window.location.origin}/panel/${panel.id}/questions`;
+  }, [panel.id, panel.qr_code_url, url]);
 
   const handleDownload = () => {
     if (!qrRef.current) return;

@@ -14,21 +14,22 @@ export const PanelService = {
         return data as Panel;
     },
 
-    async createPanel(panelData: Omit<Panel, 'id' | 'status' | 'created_at' | 'updated_at' | 'user_id' | 'qr_code' | 'participants'> & {
+    async createPanel(panelData: Omit<Panel, 'id' | 'status' | 'created_at' | 'updated_at' | 'user_id' | 'qr_code_url' | 'participants'> & {
     user_id: string;
     moderator_name: string;
     moderator_email: string;
     participants_limit: number;
   }) {
-    // Générer un QR code unique basé sur l'ID utilisateur et le timestamp
-    const qrCode = `panel-${panelData.user_id}-${Date.now()}`;
-    
+    const generatedId = crypto.randomUUID();
+    const qrUrl = `${window.location.origin}/panel/${generatedId}/questions`;
+
     const { data, error } = await supabase
       .from('panels')
       .insert({
         ...panelData,
+        id: generatedId,
         status: 'draft',
-        qr_code: qrCode
+        qr_code_url: qrUrl
       })
       .select()
       .single();
@@ -48,11 +49,11 @@ export const PanelService = {
     return data as Panel[];
   },
 
-  async updatePanel(id: string, updates: Partial<Omit<Panel, 'qr_code'>>) {
+  async updatePanel(id: string, updates: Partial<Omit<Panel, 'qr_code_url'>>) {
     // Vérifier d'abord si le panel existe
     const { data: existingPanel, error: fetchError } = await supabase
       .from('panels')
-      .select('id, qr_code')
+      .select('id, qr_code_url')
       .eq('id', id)
       .single();
 
@@ -60,10 +61,10 @@ export const PanelService = {
       throw new Error(`Panel with id ${id} not found`);
     }
 
-    // Effectuer la mise à jour en s'assurant que qr_code n'est pas modifié
+    // Effectuer la mise à jour en s'assurant que qr_code_url n'est pas modifié
     const cleanUpdates: Partial<Panel> = { ...updates };
-    if ('qr_code' in cleanUpdates) {
-      delete cleanUpdates.qr_code;
+    if ('qr_code_url' in cleanUpdates) {
+      delete cleanUpdates.qr_code_url;
     }
     const { data, error } = await supabase
       .from('panels')

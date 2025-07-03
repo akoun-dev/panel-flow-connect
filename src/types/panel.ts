@@ -20,6 +20,7 @@ export interface Panel {
     limit: number;
   };
   questions?: number;
+  qr_code_url?: string;
   status: 'draft' | 'scheduled' | 'live' | 'completed' | 'cancelled';
   category?: string;
   tags?: string[];
