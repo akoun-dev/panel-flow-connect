@@ -95,3 +95,19 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Database setup
+
+First apply the Supabase migrations normally:
+
+```sh
+supabase db reset
+```
+
+After the migrations finish, run the data correction seed script manually:
+
+```sh
+supabase db execute ./supabase/seed/data_corrections.sql
+```
+
+This step updates existing records with missing information. It should be run whenever you initialize a new database.
