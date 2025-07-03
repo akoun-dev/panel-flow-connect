@@ -14,12 +14,19 @@ export const PanelService = {
         return data as Panel;
     },
 
-    async createPanel(panelData: Omit<Panel, 'id' | 'status' | 'created_at' | 'updated_at' | 'user_id' | 'qr_code_url' | 'participants'> & {
-    user_id: string;
-    moderator_name: string;
-    moderator_email: string;
-    participants_limit: number;
-  }) {
+  async createPanel(
+    panelData: Omit<
+      Panel,
+      'id' | 'status' | 'created_at' | 'updated_at' | 'user_id' | 'qr_code_url' | 'participants'
+    > & {
+      user_id: string;
+      moderator_name: string;
+      moderator_email: string;
+      participants_limit: number;
+      start_time?: string;
+      end_time?: string;
+    }
+  ) {
     const generatedId = crypto.randomUUID();
     const qrUrl = `${window.location.origin}/panel/${generatedId}/questions`;
 

@@ -30,4 +30,6 @@ export interface Panel {
   moderator_email?: string;
   created_at: string;
   updated_at: string;
+  start_time?: string;
+  end_time?: string;
 }
