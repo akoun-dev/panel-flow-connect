@@ -144,7 +144,8 @@ L'organisateur peut inviter des participants en saisissant leurs adresses e‑ma
    npx cap sync
    npx cap open android # ou ios
    ```
-3. La base de données peut être poussée avec `supabase db push`.
+3. La base de données peut être poussée avec `supabase db push`, puis appliquez
+   les corrections de données avec `supabase db seed -f supabase/seed/data_corrections.sql`.
 
 Vous pouvez aussi publier le projet sur Lovable en ouvrant
 [la page du projet](https://lovable.dev/projects/42010448-ca15-4ded-a300-77507e6d3a1d)
