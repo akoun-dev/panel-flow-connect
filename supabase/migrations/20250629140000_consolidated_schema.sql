@@ -1,5 +1,8 @@
 -- Migration consolidée - Schéma complet du 29/06/2025
 
+-- Increase lock timeout to avoid failure when other sessions hold locks
+SET lock_timeout TO '60s';
+
 -- 1. Extensions nécessaires
 CREATE EXTENSION IF NOT EXISTS moddatetime;
 
