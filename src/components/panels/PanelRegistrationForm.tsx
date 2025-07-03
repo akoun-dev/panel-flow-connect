@@ -5,9 +5,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useState } from 'react'
+import { ArrowUp, ArrowDown } from 'lucide-react'
 import { Panel, Panelist } from '@/types/panel'
 import { PanelService } from '@/services/panelService'
-import { useUser } from '@/hooks/useUser'
 
 export function PanelRegistrationForm() {
   const { register, handleSubmit, formState: { errors } } = useForm<Panel>()
@@ -23,8 +23,7 @@ export function PanelRegistrationForm() {
     requirements: '',
     bio: ''
   })
-
-  const onSubmit = async (data: Panel) => {
+  
     const completeData = {
       ...data,
       panelists,
@@ -33,8 +32,6 @@ export function PanelRegistrationForm() {
       moderator_email: '',
       participants_limit: data.participants_limit || 0
     }
-
-    await PanelService.createPanel(completeData)
   }
 
   const addPanelist = () => {
@@ -125,6 +122,7 @@ export function PanelRegistrationForm() {
                 <TableHead>Organisation</TableHead>
                 <TableHead>Thème</TableHead>
                 <TableHead>Temps</TableHead>
+                <TableHead className="w-24">Ordre</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -136,6 +134,30 @@ export function PanelRegistrationForm() {
                   <TableCell>{panelist.organization}</TableCell>
                   <TableCell>{panelist.theme}</TableCell>
                   <TableCell>{panelist.allocatedTime}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        disabled={index === 0}
+                        onClick={() => movePanelist(index, 'up')}
+                        data-testid={`move-up-${index}`}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        disabled={index === panelists.length - 1}
+                        onClick={() => movePanelist(index, 'down')}
+                        data-testid={`move-down-${index}`}
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
