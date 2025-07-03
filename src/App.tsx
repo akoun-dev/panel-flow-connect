@@ -36,6 +36,7 @@ import QuestionsWrapper from "@/components/QuestionsWrapper";
 import UserPlanning from "./pages/user/UserPlanning";
 import Questions from "./pages/Questions";
 import JoinPanel from "./pages/JoinPanel";
+import Projection from "./pages/Projection";
 
 import ProjectionWrapper from "@/components/ProjectionWrapper";
 
