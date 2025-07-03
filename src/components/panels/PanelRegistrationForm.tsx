@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { ArrowUp, ArrowDown } from 'lucide-react'
 import { Panel, Panelist } from '@/types/panel'
 import { PanelService } from '@/services/panelService'
+import { useUser } from '@/hooks/useUser'
 
 export function PanelRegistrationForm() {
   const { register, handleSubmit, formState: { errors } } = useForm<Panel>()
@@ -23,7 +24,8 @@ export function PanelRegistrationForm() {
     requirements: '',
     bio: ''
   })
-  
+
+  const onSubmit = async (data: Panel) => {
     const completeData = {
       ...data,
       panelists,
@@ -32,6 +34,8 @@ export function PanelRegistrationForm() {
       moderator_email: '',
       participants_limit: data.participants_limit || 0
     }
+
+    await PanelService.createPanel(completeData)
   }
 
   const addPanelist = () => {
@@ -48,6 +52,19 @@ export function PanelRegistrationForm() {
         bio: ''
       })
     }
+  }
+
+  const movePanelist = (index: number, direction: 'up' | 'down') => {
+    setPanelists((prev) => {
+      const newList = [...prev]
+      const targetIndex = direction === 'up' ? index - 1 : index + 1
+      if (targetIndex < 0 || targetIndex >= newList.length) {
+        return newList
+      }
+      const [item] = newList.splice(index, 1)
+      newList.splice(targetIndex, 0, item)
+      return newList
+    })
   }
 
   return (
