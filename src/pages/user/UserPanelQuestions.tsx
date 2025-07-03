@@ -106,7 +106,7 @@ export default function UserPanelQuestions() {
     if (!panelId) return;
 
     const subscription = supabase
-      .channel(`panel_questions:${panelId}`)
+      .channel(`questions:${panelId}`)
       .on(
         'postgres_changes',
         {
