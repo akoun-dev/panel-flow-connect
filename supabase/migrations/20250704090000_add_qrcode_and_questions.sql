@@ -1,10 +1,6 @@
 -- Ajout du champ QR code à la table panels
-ALTER TABLE public.panels ADD COLUMN qr_code TEXT UNIQUE;
-
--- Génération des QR codes pour les panels existants
-UPDATE public.panels 
-SET qr_code = gen_random_uuid()::text 
-WHERE qr_code IS NULL;
+ALTER TABLE public.panels
+  ADD COLUMN qr_code TEXT UNIQUE DEFAULT gen_random_uuid()::text;
 
 -- Création de la table pour les questions
 CREATE TABLE public.panel_questions (
