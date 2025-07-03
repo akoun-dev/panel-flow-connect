@@ -88,30 +88,7 @@ ALTER TABLE public.panels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.panel_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_planning ENABLE ROW LEVEL SECURITY;
 
--- Triggers de mise à jour des timestamps (au cas où)
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION update_panel_invitation_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION update_user_planning_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Triggers de mise à jour des timestamps (fonctions déjà définies)
 
 DROP TRIGGER IF EXISTS panels_updated_at ON panels;
 CREATE TRIGGER panels_updated_at

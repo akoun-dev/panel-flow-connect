@@ -1,12 +1,4 @@
-[?25l
-    Select a project:                                                                         
-                                                                                              
-  >  1. vhxqqrwagrgwqjfhenla [name: PanelFlow, org: dsjshzqzyrchbwlokjfs, region: us-east-2]  
-    2. yivvlkpflrwwqohiqjuz [name: AssurCompare, org: dsjshzqzyrchbwlokjfs, region: us-east-1]
-                                                                                              
-                                                                                              
-    ↑/k up • ↓/j down • / filter • q quit • ? more                                            
-                                                                                              [0D[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[0D[2K [0D[2K[?25h[?1002l[?1003l[?1006lexport type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -87,6 +79,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string | null
+          qr_code: string | null
         }
         Insert: {
           allocated_time?: number | null
@@ -110,6 +103,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id?: string | null
+          qr_code?: string | null
         }
         Update: {
           allocated_time?: number | null
@@ -133,6 +127,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string | null
+          qr_code?: string | null
         }
         Relationships: [
           {
@@ -182,10 +177,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      fix_invitation_email_mismatch: {
-        Args: { old_email: string; new_email: string }
-        Returns: undefined
-      }
       get_user_invitations: {
         Args: { user_email: string }
         Returns: {
