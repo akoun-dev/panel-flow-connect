@@ -67,6 +67,7 @@ interface Question {
   created_at: string;
   is_anonymous?: boolean;
   panelist_email?: string | null;
+  author_name?: string | null;
   responses: Array<{content: string; created_at?: string}>;
   is_answered: boolean;
 }
@@ -238,6 +239,9 @@ export default function UserPanelQuestions() {
               {isRecent && <Badge variant="secondary" className="text-xs">Nouveau</Badge>}
             </div>
             <p className="text-sm text-gray-900 truncate">{question.content}</p>
+            {!question.is_anonymous && question.author_name && (
+              <p className="text-xs text-gray-500 truncate">par {question.author_name}</p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {hasResponse && (
@@ -394,6 +398,9 @@ export default function UserPanelQuestions() {
                   <p className="text-gray-800 text-sm sm:text-base leading-relaxed break-words">
                     {question.content}
                   </p>
+                  {!question.is_anonymous && question.author_name && (
+                    <p className="text-xs text-gray-500 mt-1">par {question.author_name}</p>
+                  )}
                 </div>
 
                 {/* Response */}
