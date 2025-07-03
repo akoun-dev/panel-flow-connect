@@ -35,6 +35,7 @@ import UserPanelQuestions from "./pages/user/UserPanelQuestions";
 import QuestionsWrapper from "@/components/QuestionsWrapper";
 import UserPlanning from "./pages/user/UserPlanning";
 import Questions from "./pages/Questions";
+import ProjectionWrapper from "@/components/ProjectionWrapper";
 
 const queryClient = new QueryClient();
 
@@ -127,8 +128,9 @@ const App = () => {
               <Route path="profile" element={<AdminProfilePage />} />
             </Route>
             
-            {/* Route publique pour les questions */}
+            {/* Routes publiques pour les panels */}
             <Route path="/panel/:panelId/questions" element={<QuestionsWrapper />} />
+            <Route path="/panel/:panelId/projection" element={<ProjectionWrapper />} />
             {/* Route 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
