@@ -458,9 +458,10 @@ export default function PanelPollsPage() {
           )}
         </DialogContent>
       </Dialog>
-      <div className="p-4 space-y-6 max-w-7xl mx-auto">
-      {/* En-tête avec statistiques globales */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="min-h-screen bg-gray-50/50 w-full">
+        <div className="p-4 space-y-6 max-w-7xl mx-auto">
+          {/* En-tête avec statistiques globales */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-2">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Tableau de bord des sondages
@@ -849,6 +850,7 @@ export default function PanelPollsPage() {
           ))}
         </div>
       )}
+    </div>
     </div>
     </>
   );
