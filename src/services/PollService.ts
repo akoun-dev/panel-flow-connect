@@ -34,6 +34,33 @@ class PollService {
     if (error) throw error;
   }
 
+  static async updatePoll(
+    pollId: string,
+    question: string,
+    options: { id?: string; text: string }[]
+  ) {
+    const { error: pollErr } = await supabase
+      .from('polls')
+      .update({ question })
+      .eq('id', pollId);
+    if (pollErr) throw pollErr;
+
+    for (const opt of options) {
+      if (opt.id) {
+        const { error } = await supabase
+          .from('poll_options')
+          .update({ text: opt.text })
+          .eq('id', opt.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('poll_options')
+          .insert({ poll_id: pollId, text: opt.text });
+        if (error) throw error;
+      }
+    }
+  }
+
   static subscribeToPoll(pollId: string, cb: () => void) {
     const channel = supabase
       .channel(`poll_votes:${pollId}`)
