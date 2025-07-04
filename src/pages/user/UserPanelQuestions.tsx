@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useDebugValue } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from 'react-router-dom';
@@ -77,6 +77,11 @@ interface Question {
 export default function UserPanelQuestions() {
   const [searchParams] = useSearchParams();
   const panelId = searchParams.get('panel');
+  
+  // Debug logs
+  useEffect(() => {
+    console.log('UserPanelQuestions component mounted with panelId:', panelId);
+  }, [panelId]);
   const [realtimeStatus, setRealtimeStatus] = useState<string>('disconnected');
   const [panelTitle, setPanelTitle] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -169,7 +174,12 @@ export default function UserPanelQuestions() {
 
   const handleToggleAnswered = async (q: Question) => {
     try {
-      await QuestionService.updateAnswered(q.id, !q.is_answered);
+      const { error } = await supabase
+        .from('questions')
+        .update({ is_answered: !q.is_answered })
+        .eq('id', q.id);
+      
+      if (error) throw error;
       refetch();
     } catch (err) {
       logger.error('Failed to update question', err);
@@ -542,6 +552,15 @@ export default function UserPanelQuestions() {
       </Card>
     </div>
   );
+
+  useEffect(() => {
+    if (panelId) {
+      console.log('Rendering UserPanelQuestions - isPanelAdmin:', isPanelAdmin, 'panelId:', panelId);
+      if (isPanelAdmin) {
+        console.log('Admin view - Rendering PollCreator');
+      }
+    }
+  }, [isPanelAdmin, panelId]);
 
   if (!panelId) return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6">

@@ -71,9 +71,9 @@ interface ExtendedPoll extends Poll {
   unique_voters: number;
   options: PollOption[];
   status?: 'active' | 'draft' | 'closed';
-  participation_rate?: number;
+  participation_rate: number;
   winner_option?: PollOption;
-  engagement_score?: number;
+  engagement_score: number;
 }
 
 type SortField = 'created_at' | 'total_votes' | 'unique_voters' | 'question';
@@ -108,7 +108,8 @@ export default function PanelPollsPage() {
   const filteredAndSortedPolls = useMemo(() => {
     let filtered = polls.filter(poll => {
       const matchesSearch = poll.question.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || poll.status === filterStatus;
+      const pollStatus = poll.status || 'active';
+      const matchesStatus = filterStatus === 'all' || pollStatus === filterStatus;
       return matchesSearch && matchesStatus;
     });
 
@@ -146,9 +147,9 @@ export default function PanelPollsPage() {
       totalParticipants,
       averageVotes,
       mostPopular,
-      active: polls.filter(p => p.status === 'active').length,
-      draft: polls.filter(p => p.status === 'draft').length,
-      closed: polls.filter(p => p.status === 'closed').length,
+      active: polls.filter(p => (p.status || 'active') === 'active').length,
+      draft: polls.filter(p => (p.status || 'active') === 'draft').length,
+      closed: polls.filter(p => (p.status || 'active') === 'closed').length,
     };
   }, [polls]);
 
@@ -159,7 +160,7 @@ export default function PanelPollsPage() {
     setError(null);
     
     try {
-      // Requête optimisée avec toutes les données nécessaires
+      // Requête corrigée pour récupérer les sondages et leurs votes
       const { data: pollsData, error: pollsError } = await supabase
         .from('polls')
         .select(`
@@ -170,10 +171,10 @@ export default function PanelPollsPage() {
           poll_options (
             id,
             text,
-            poll_votes (count)
-          ),
-          poll_votes (
-            user_id
+            poll_votes (
+              id,
+              user_id
+            )
           )
         `)
         .eq('panel_id', panelId)
@@ -183,16 +184,21 @@ export default function PanelPollsPage() {
 
       // Traitement des données côté client
       const pollsWithStats: ExtendedPoll[] = (pollsData || []).map(poll => {
-        const options: PollOption[] = poll.poll_options.map(option => ({
+        const options: PollOption[] = (poll.poll_options || []).map(option => ({
           id: option.id,
           text: option.text,
-          vote_count: option.poll_votes?.[0]?.count ?? 0
+          vote_count: option.poll_votes?.length || 0
         }));
 
         const totalVotes = options.reduce((sum, opt) => sum + opt.vote_count, 0);
-        const uniqueVoters = new Set(poll.poll_votes?.map(v => v.user_id)).size;
-        const winnerOption = options.reduce((max, opt) => 
-          opt.vote_count > (max?.vote_count || 0) ? opt : max, null);
+        
+        // Calculer les votants uniques
+        const allVotes = poll.poll_options?.flatMap(opt => opt.poll_votes || []) || [];
+        const uniqueVoters = new Set(allVotes.map(v => v.user_id)).size;
+        
+        const winnerOption = options.length > 0 
+          ? options.reduce((max, opt) => opt.vote_count > (max?.vote_count || 0) ? opt : max, options[0])
+          : undefined;
         
         const engagementScore = totalVotes > 0 ? 
           Math.round((uniqueVoters / totalVotes) * 100) : 0;
@@ -202,8 +208,8 @@ export default function PanelPollsPage() {
           options,
           total_votes: totalVotes,
           unique_voters: uniqueVoters,
-          status: 'active' as const,
-          winner_option: winnerOption,
+          status: 'active' as const, // Status par défaut puisque la colonne n'existe pas en DB
+          winner_option: winnerOption && winnerOption.vote_count > 0 ? winnerOption : undefined,
           engagement_score: engagementScore,
           participation_rate: Math.round((uniqueVoters / 100) * 100)
         };
@@ -665,7 +671,7 @@ export default function PanelPollsPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
                       <Badge className={getStatusColor(poll.status || 'active')}>
-                        {poll.status || 'Actif'}
+                        {poll.status || 'active'}
                       </Badge>
                       <span className="text-sm text-gray-500 flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
@@ -844,5 +850,6 @@ export default function PanelPollsPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

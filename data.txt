@@ -1,0 +1,10 @@
+filtre sur la date panel
+
+changer la couleur du QR code
+
+enregistrer les paroles de paneliste pour les rapports pour chaque paneliste
+
+
+panel, conference, kenote
+
+lorsque on  cree le sondage, il ya 1 vote par defaut, c'est pas normale et fais la recuperation des donnes (aussi le systeme de temps reel)
