@@ -56,6 +56,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import PollQRCode from '@/components/polls/PollQRCode';
+import { PollCreator } from '@/components/polls/PollCreator';
 import type { Poll } from '@/types/poll';
 
 interface PollOption {
@@ -99,6 +100,7 @@ export default function PanelPollsPage() {
   // États d'interaction
   const [selectedPolls, setSelectedPolls] = useState<Set<string>>(new Set());
   const [expandedPoll, setExpandedPoll] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Mémoisation des sondages filtrés et triés
   const filteredAndSortedPolls = useMemo(() => {
@@ -263,6 +265,11 @@ export default function PanelPollsPage() {
     setSelectedPolls(newSelected);
   };
 
+  const handlePollCreated = useCallback(() => {
+    setCreateDialogOpen(false);
+    fetchPolls();
+  }, [fetchPolls]);
+
   // Composants utilitaires
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -424,7 +431,14 @@ export default function PanelPollsPage() {
   }
 
   return (
-    <div className="p-4 space-y-6 max-w-7xl mx-auto">
+    <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Créer un sondage</DialogTitle>
+        </DialogHeader>
+        <PollCreator panelId={panelId} onCreated={handlePollCreated} />
+      </DialogContent>
+      <div className="p-4 space-y-6 max-w-7xl mx-auto">
       {/* En-tête avec statistiques globales */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-2">
@@ -578,7 +592,7 @@ export default function PanelPollsPage() {
             </DropdownMenu>
           )}
           
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nouveau sondage
           </Button>
@@ -612,7 +626,7 @@ export default function PanelPollsPage() {
                     Réinitialiser les filtres
                   </Button>
                 )}
-                <Button>
+                <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Créer un sondage
                 </Button>
@@ -816,5 +830,6 @@ export default function PanelPollsPage() {
         </div>
       )}
     </div>
+    </Dialog>
   );
 }
