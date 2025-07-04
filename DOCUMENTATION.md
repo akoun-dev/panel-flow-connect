@@ -29,7 +29,7 @@ Panel Flow Connect est une application web et mobile développée avec React, Vi
 - Affichage des résultats en direct et mise à jour des votes sans rechargement.
 - Possibilité pour les utilisateurs de voter en temps réel.
 - Chaque sondage dispose d'une page publique `/poll/{id}` accessible via un QR Code pour faciliter le partage.
-- Les modérateurs peuvent consulter tous les sondages d'un panel via `/panel/{id}/polls` depuis la gestion de panel.
+
 
 ### Tableau de bord utilisateur
 - Vue d'ensemble des activités : prochain panel, statistiques personnelles, actions rapides.

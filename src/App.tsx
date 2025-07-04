@@ -38,7 +38,7 @@ import Questions from "./pages/Questions";
 import JoinPanel from "./pages/JoinPanel";
 import Projection from "./pages/Projection";
 import PollPage from "./pages/PollPage";
-import PanelPollsPage from "./pages/PanelPollsPage";
+
 
 import ProjectionWrapper from "@/components/ProjectionWrapper";
 
