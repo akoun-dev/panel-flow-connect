@@ -1146,6 +1146,20 @@ export function UserPanels() {
                                           Projection
                                       </Button>
 
+                                      <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                              window.location.href = `/panel/${
+                                                  managePanelModal.panel!.id
+                                              }/polls`
+                                          }}
+                                          className="flex items-center gap-2"
+                                      >
+                                          <BarChart3 className="h-4 w-4" />
+                                          Sondages
+                                      </Button>
+
                                       {/* <Button
                                       variant="outline"
                                           size="sm"
