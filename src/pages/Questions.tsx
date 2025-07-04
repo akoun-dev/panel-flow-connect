@@ -51,7 +51,7 @@ interface Question {
   content: string;
   panel_id: string;
   panelist_email?: string | null;
-  author_name?: string | null;
+  // author_name?: string | null;
   is_anonymous: boolean;
   is_answered: boolean;
   created_at: string;
@@ -253,7 +253,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
           is_anonymous: isAnonymous,
           is_answered: false,
           panelist_email: selectedPanelistEmail || null,
-          author_name: isAnonymous ? null : authorName.trim()
+          // author_name: isAnonymous ? null : authorName.trim()
         })
         .select()
         .single();
@@ -544,9 +544,9 @@ export default function Questions({ panel }: { panel?: Panel }) {
                 {question.content}
               </p>
 
-              {!question.is_anonymous && question.author_name && (
+              {/* {!question.is_anonymous && question.author_name && (
                 <p className="text-xs text-gray-500 mb-2">Par {question.author_name}</p>
-              )}
+              )} */}
 
               <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs sm:text-sm text-gray-500">
                 <div className="flex items-center gap-1">

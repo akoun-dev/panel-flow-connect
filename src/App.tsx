@@ -41,6 +41,7 @@ import PollPage from "./pages/PollPage";
 
 
 import ProjectionWrapper from "@/components/ProjectionWrapper";
+import PanelPollsPage from "./pages/PanelPollsPage";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +116,7 @@ const App = () => {
               <Route path="profile" element={<UserProfile />} />
               <Route path="invitations" element={<UserInvitation />} />
               <Route path="panel-questions" element={<UserPanelQuestions />} />
+              <Route path="/panel/:panelId/polls" element={<PanelPollsPage />} />
             </Route>
 
             {/* Routes admin avec AdminLayout */}
@@ -136,7 +138,6 @@ const App = () => {
             {/* Routes publiques pour les panels */}
             <Route path="/panel/:panelId/questions" element={<QuestionsWrapper />} />
             <Route path="/panel/:panelId/projection" element={<ProjectionWrapper />} />
-            <Route path="/panel/:panelId/polls" element={<PanelPollsPage />} />
             <Route path="/panel/join" element={<JoinPanel />} />
             <Route path="/poll/:pollId" element={<PollPage />} />
             {/* Route 404 */}
