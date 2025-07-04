@@ -57,6 +57,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import PollQRCode from '@/components/polls/PollQRCode';
 import { PollCreator } from '@/components/polls/PollCreator';
+import { PollEditor } from '@/components/polls/PollEditor';
 import type { Poll } from '@/types/poll';
 
 interface PollOption {
@@ -101,6 +102,7 @@ export default function PanelPollsPage() {
   const [selectedPolls, setSelectedPolls] = useState<Set<string>>(new Set());
   const [expandedPoll, setExpandedPoll] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editingPoll, setEditingPoll] = useState<ExtendedPoll | null>(null);
 
   // Mémoisation des sondages filtrés et triés
   const filteredAndSortedPolls = useMemo(() => {
@@ -184,7 +186,7 @@ export default function PanelPollsPage() {
         const options: PollOption[] = poll.poll_options.map(option => ({
           id: option.id,
           text: option.text,
-          vote_count: option.poll_votes?.length || 0
+          vote_count: option.poll_votes?.[0]?.count ?? 0
         }));
 
         const totalVotes = options.reduce((sum, opt) => sum + opt.vote_count, 0);
@@ -431,13 +433,25 @@ export default function PanelPollsPage() {
   }
 
   return (
-    <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Créer un sondage</DialogTitle>
-        </DialogHeader>
-        <PollCreator panelId={panelId} onCreated={handlePollCreated} />
-      </DialogContent>
+    <>
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Créer un sondage</DialogTitle>
+          </DialogHeader>
+          <PollCreator panelId={panelId} onCreated={handlePollCreated} />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!editingPoll} onOpenChange={(o) => { if (!o) setEditingPoll(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Modifier le sondage</DialogTitle>
+          </DialogHeader>
+          {editingPoll && (
+            <PollEditor poll={editingPoll} onSaved={() => { setEditingPoll(null); fetchPolls(); }} />
+          )}
+        </DialogContent>
+      </Dialog>
       <div className="p-4 space-y-6 max-w-7xl mx-auto">
       {/* En-tête avec statistiques globales */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -818,7 +832,7 @@ export default function PanelPollsPage() {
                       <Download className="h-4 w-4 mr-2" />
                       Exporter
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => setEditingPoll(poll)}>
                       <Settings className="h-4 w-4 mr-2" />
                       Modifier
                     </Button>
@@ -830,6 +844,5 @@ export default function PanelPollsPage() {
         </div>
       )}
     </div>
-    </Dialog>
   );
 }
