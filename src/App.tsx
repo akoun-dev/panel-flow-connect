@@ -39,6 +39,7 @@ import JoinPanel from "./pages/JoinPanel";
 import Projection from "./pages/Projection";
 import PollPage from "./pages/PollPage";
 
+
 import ProjectionWrapper from "@/components/ProjectionWrapper";
 
 const queryClient = new QueryClient();
@@ -135,6 +136,7 @@ const App = () => {
             {/* Routes publiques pour les panels */}
             <Route path="/panel/:panelId/questions" element={<QuestionsWrapper />} />
             <Route path="/panel/:panelId/projection" element={<ProjectionWrapper />} />
+            <Route path="/panel/:panelId/polls" element={<PanelPollsPage />} />
             <Route path="/panel/join" element={<JoinPanel />} />
             <Route path="/poll/:pollId" element={<PollPage />} />
             {/* Route 404 */}
