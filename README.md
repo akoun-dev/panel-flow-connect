@@ -103,6 +103,10 @@ This project is built with:
 | `npm run lint`    | Lance ESLint sur l'ensemble du projet           |
 | `npm run preview` | Prévisualise le contenu généré après build      |
 
+Avant de lancer `npm test` ou `npm run lint`, exécutez `npm install`. Jest et
+ESLint s'appuient sur les dépendances de développement listées dans
+`package.json`.
+
 ## Fonctionnalités principales
 
 ### Page d'accueil
