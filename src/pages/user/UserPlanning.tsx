@@ -62,33 +62,54 @@ type PanelEvent = {
 }
 
 const statusConfig = {
-  confirmed: { 
-    label: "Confirmé", 
+  draft: {
+    label: "Brouillon",
+    color: "bg-slate-100 text-slate-700 border-slate-200",
+    icon: AlertCircle,
+    calendarColor: "#94a3b8",
+    dotColor: "bg-slate-400"
+  },
+  scheduled: {
+    label: "Programmé",
+    color: "bg-blue-100 text-blue-700 border-blue-200",
+    icon: CalendarDays,
+    calendarColor: "#3b82f6",
+    dotColor: "bg-blue-500"
+  },
+  live: {
+    label: "En cours",
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    icon: Zap,
+    calendarColor: "#10b981",
+    dotColor: "bg-emerald-500"
+  },
+  confirmed: {
+    label: "Confirmé",
     color: "bg-emerald-100 text-emerald-700 border-emerald-200",
     icon: CheckCircle,
     calendarColor: "#10b981",
     dotColor: "bg-emerald-500"
   },
-  pending: { 
-    label: "En attente", 
+  pending: {
+    label: "En attente",
     color: "bg-amber-100 text-amber-700 border-amber-200",
     icon: AlertCircle,
     calendarColor: "#f59e0b",
     dotColor: "bg-amber-500"
   },
-  cancelled: { 
-    label: "Annulé", 
+  cancelled: {
+    label: "Annulé",
     color: "bg-red-100 text-red-700 border-red-200",
     icon: XCircle,
     calendarColor: "#ef4444",
     dotColor: "bg-red-500"
   },
-  completed: { 
-    label: "Terminé", 
-    color: "bg-blue-100 text-blue-700 border-blue-200",
+  completed: {
+    label: "Terminé",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
     icon: CheckCircle,
-    calendarColor: "#3b82f6",
-    dotColor: "bg-blue-500"
+    calendarColor: "#8b5cf6",
+    dotColor: "bg-purple-500"
   }
 };
 
@@ -156,15 +177,9 @@ export default function UserPlanning() {
                     console.error('[DEBUG] Query error:', error)
                     throw error
                 }
-                
-                logger.debug('[DEBUG] Query successful, data:', data)
-                if (!data) {
-                    logger.debug('[DEBUG] No data returned')
-                    return
-                }
 
-                const formattedPanels: PanelEvent[] = (data as SupabasePanel[])
-                    .filter(item => item.panels && item.panels.length > 0) // Filtre d'abord les éléments valides
+                const planningPanels: PanelEvent[] = (data as SupabasePanel[])
+                    .filter(item => item.panels && item.panels.length > 0)
                     .map(item => ({
                         id: item.id,
                         panel_id: item.panel_id,
@@ -176,8 +191,33 @@ export default function UserPlanning() {
                         status: item.status,
                     }))
 
-                setAcceptedPanels(formattedPanels)
-                setFilteredPanels(formattedPanels)
+                // Panels créés par l'utilisateur
+                const { data: ownData, error: ownError } = await supabase
+                    .from('panels')
+                    .select('id, title, description, date, time, duration, status')
+                    .eq('user_id', userId)
+                    .order('date', { ascending: true })
+
+                if (ownError) {
+                    console.error('[DEBUG] Own panels error:', ownError)
+                    throw ownError
+                }
+
+                const ownPanels: PanelEvent[] = (ownData as any[]).map(panel => ({
+                    id: panel.id,
+                    panel_id: panel.id,
+                    title: panel.title,
+                    description: panel.description,
+                    date: panel.date,
+                    time: panel.time,
+                    duration: panel.duration,
+                    status: panel.status,
+                }))
+
+                const combined = [...planningPanels, ...ownPanels]
+
+                setAcceptedPanels(combined)
+                setFilteredPanels(combined)
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Une erreur est survenue")
                 toast.error("Erreur lors du chargement du planning")
