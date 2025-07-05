@@ -164,7 +164,11 @@ export default function Home() {
                 sessions interactives
               </span>
             </h1>
-            
+
+            <p className="text-2xl sm:text-3xl font-semibold text-gradient mb-4 animate-[fadeIn_1s_ease-in-out_0.6s_forwards] opacity-0">
+              Connect. Boost. Impact.
+            </p>
+
             <p className="text-lg sm:text-xl md:text-2xl text-slate-600 max-w-4xl mx-auto mb-10 leading-relaxed animate-[fadeIn_1s_ease-in-out_0.8s_forwards] opacity-0">
               La solution complète pour gérer vos panels et interactions.<br className="hidden sm:inline" />
               Collectez et analysez les réponses en temps réel avec précision.
