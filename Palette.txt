@@ -1,0 +1,37 @@
+/* CSS HEX */
+ --de-york: #84c282;
+--pelorous: #45b9bc;
+--tory-blue: #0c54a4;
+--java: #19b3d2;
+--fountain-blue: #5cbcb4;
+--lochmara: #046eb6;
+--endeavour: #045ca4;
+--ming: #347080;
+--blue-chill: #0c70a8;
+--blue-chill: #0c70a8;
+
+
+/* SCSS HEX */
+$de-york: #84c282;
+$pelorous: #45b9bc;
+$tory-blue: #0c54a4;
+$java: #19b3d2;
+$fountain-blue: #5cbcb4;
+$lochmara: #046eb6;
+$endeavour: #045ca4;
+$ming: #347080;
+$blue-chill: #0c70a8;
+$blue-chill: #0c70a8;
+
+
+/* SCSS RGB */
+--de-york: rgba(132,194,130,1);
+--pelorous: rgba(69,185,188,1);
+--tory-blue: rgba(12,84,164,1);
+--java: rgba(25,179,210,1);
+--fountain-blue: rgba(92,188,180,1);
+--lochmara: rgba(4,110,182,1);
+--endeavour: rgba(4,92,164,1);
+--ming: rgba(52,112,128,1);
+--blue-chill: rgba(12,112,168,1);
+--blue-chill: rgba(12,112,168,1);

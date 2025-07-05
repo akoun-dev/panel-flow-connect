@@ -1,5 +1,3 @@
-filtre sur la date panel
-
-changer la couleur du QR code
-
-enregistrer les paroles de paneliste pour les rapports pour chaque paneliste
+<main className="flex-1 w-full px-2 sm:px-4 py-2 sm:py-4 mt-16 lg:mt-0">
+                  <Outlet />
+              </main>

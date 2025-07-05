@@ -47,7 +47,7 @@ function CurrentTime() {
   }, []);
 
   return (
-    <div className="hidden sm:flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+    <div className="hidden sm:flex items-center gap-2 text-sm text-[#0c70a8] dark:text-[#45b9bc]">
       <Clock className="h-4 w-4" />
       <div className="flex items-baseline gap-1">
         <span className="font-medium">{format(currentTime, "HH:mm", { locale: fr })}</span>
@@ -71,9 +71,9 @@ export function UserLayout({ children }: UserLayoutProps) {
   }, []);
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900 dark:to-teal-900">
+      <div className="min-h-screen bg-gradient-to-br from-[#84c282]/20 to-[#5cbcb4]/30 dark:from-[#347080] dark:to-[#045ca4]">
           {/* Header spécifique panéliste */}
-          <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-emerald-200 dark:border-gray-700 sticky top-0 z-40">
+          <header className="bg-white/90 dark:bg-[#347080]/90 backdrop-blur-sm border-b border-[#84c282]/30 dark:border-[#045ca4] sticky top-0 z-40">
               <div className="px-2 sm:px-4 lg:px-6">
                   <div className="flex justify-between items-center h-16">
                       <div className="flex items-center gap-2 sm:gap-4">
@@ -92,14 +92,14 @@ export function UserLayout({ children }: UserLayoutProps) {
                           </Button>
 
                           <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center">
+                              <div className="w-10 h-10 bg-gradient-to-br from-[#046eb6] to-[#5cbcb4] rounded-xl flex items-center justify-center">
                                   <Mic className="h-5 w-5 text-white" />
                               </div>
                               <div>
-                                  <h1 className="text-lg sm:text-xl font-bold text-emerald-900 dark:text-emerald-100">
+                                  <h1 className="text-lg sm:text-xl font-bold text-[#0c54a4] dark:text-[#5cbcb4]">
                                       PANELFLOW
                                   </h1>
-                                  <p className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-300">
+                                  <p className="text-xs sm:text-sm text-[#45b9bc] dark:text-[#84c282]">
                                       Mon espace
                                   </p>
                               </div>
@@ -112,14 +112,14 @@ export function UserLayout({ children }: UserLayoutProps) {
                               <button className="flex items-center gap-2 focus:outline-none">
                                   <Avatar className="h-9 w-9">
                                       <AvatarImage src="/avatars/panelist.png" />
-                                      <AvatarFallback className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-100">
+                                      <AvatarFallback className="bg-[#84c282]/20 text-[#0c54a4] dark:bg-[#045ca4] dark:text-[#5cbcb4]">
                                           <User className="h-4 w-4" />
                                       </AvatarFallback>
                                   </Avatar>
                               </button>
-                              <div className="absolute right-0 mt-2 w-56 origin-top-right bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                              <div className="absolute right-0 mt-2 w-56 origin-top-right bg-white dark:bg-[#347080] rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                   <div className="py-1">
-                                      <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700">
+                                      <div className="px-4 py-2 text-sm text-gray-700 dark:text-[#84c282] border-b border-gray-100 dark:border-[#045ca4]">
                                           {userEmail}
                                       </div>
                                       <button
@@ -127,7 +127,7 @@ export function UserLayout({ children }: UserLayoutProps) {
                                               const { error } = await supabase.auth.signOut()
                                               if (!error) window.location.href = '/auth/login'
                                           }}
-                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-[#84c282] hover:bg-gray-100 dark:hover:bg-[#045ca4]/50"
                                       >
                                           Déconnexion
                                       </button>
@@ -143,7 +143,7 @@ export function UserLayout({ children }: UserLayoutProps) {
               {/* Sidebar spécifique panéliste */}
               <aside
                   className={cn(
-                      "fixed inset-y-0 left-0 z-50 w-56 sm:w-64 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-r border-emerald-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 mt-16 lg:mt-0",
+                      "fixed inset-y-0 left-0 z-50 w-56 sm:w-64 bg-white/95 dark:bg-[#347080]/95 backdrop-blur-sm border-r border-[#84c282]/30 dark:border-[#045ca4] transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 mt-16 lg:mt-0",
                       sidebarOpen ? "translate-x-0" : "-translate-x-full"
                   )}
               >
@@ -157,8 +157,8 @@ export function UserLayout({ children }: UserLayoutProps) {
                                   className={cn(
                                       "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                                       isActive
-                                          ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-100 shadow-sm"
-                                          : "text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-300"
+                                          ? "bg-[#84c282]/20 dark:bg-[#045ca4] text-[#0c54a4] dark:text-[#5cbcb4] shadow-sm"
+                                          : "text-gray-600 dark:text-gray-300 hover:bg-[#84c282]/10 dark:hover:bg-[#347080] hover:text-[#45b9bc] dark:hover:text-[#84c282]"
                                   )}
                                   onClick={() => setSidebarOpen(false)}
                               >
@@ -168,20 +168,6 @@ export function UserLayout({ children }: UserLayoutProps) {
                           )
                       })}
                   </nav>
-
-                  {/* Info session en cours */}
-                  {/* <div className="mt-8 mx-2 sm:mx-4 p-3 sm:p-4 bg-emerald-100 dark:bg-emerald-900 rounded-lg sm:rounded-xl">
-                      <h3 className="font-semibold text-emerald-900 dark:text-emerald-100 text-xs sm:text-sm mb-1 sm:mb-2">
-                          Session en cours
-                      </h3>
-                      <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1 sm:mb-2">
-                          Panel Innovation Tech
-                      </p>
-                      <div className="flex items-center gap-1 sm:gap-2 text-xs text-emerald-600 dark:text-emerald-400">
-                          <Clock className="h-3 w-3" />
-                          <span>15:30 restantes</span>
-                      </div>
-                  </div> */}
               </aside>
 
               {/* Overlay mobile */}
