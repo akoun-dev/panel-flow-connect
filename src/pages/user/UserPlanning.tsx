@@ -8,6 +8,7 @@ import interactionPlugin from "@fullcalendar/interaction"
 import type { EventInput, EventClickArg } from "@fullcalendar/core"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { STATUS_CONFIG } from "@/constants/statusConfig"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -87,65 +88,6 @@ type PanelData = {
 }
 
 type IconComponent = React.ComponentType<{ className?: string }>
-
-const STATUS_CONFIG = {
-  draft: {
-    label: "Brouillon",
-    color: "bg-slate-100 text-slate-700 border-slate-200",
-    icon: AlertCircle,
-    calendarColor: "#64748b",
-    dotColor: "bg-slate-400",
-    gradient: "from-slate-100 to-slate-200"
-  },
-  scheduled: {
-    label: "Programmé",
-    color: "bg-blue-100 text-blue-700 border-blue-200",
-    icon: CalendarDays,
-    calendarColor: "#3b82f6",
-    dotColor: "bg-blue-500",
-    gradient: "from-blue-100 to-blue-200"
-  },
-  live: {
-    label: "En cours",
-    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    icon: Zap,
-    calendarColor: "#10b981",
-    dotColor: "bg-emerald-500",
-    gradient: "from-emerald-100 to-emerald-200"
-  },
-  confirmed: {
-    label: "Confirmé",
-    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    icon: CheckCircle,
-    calendarColor: "#10b981",
-    dotColor: "bg-emerald-500",
-    gradient: "from-emerald-100 to-emerald-200"
-  },
-  pending: {
-    label: "En attente",
-    color: "bg-amber-100 text-amber-700 border-amber-200",
-    icon: AlertCircle,
-    calendarColor: "#f59e0b",
-    dotColor: "bg-amber-500",
-    gradient: "from-amber-100 to-amber-200"
-  },
-  cancelled: {
-    label: "Annulé",
-    color: "bg-red-100 text-red-700 border-red-200",
-    icon: XCircle,
-    calendarColor: "#ef4444",
-    dotColor: "bg-red-500",
-    gradient: "from-red-100 to-red-200"
-  },
-  completed: {
-    label: "Terminé",
-    color: "bg-purple-100 text-purple-700 border-purple-200",
-    icon: CheckCircle,
-    calendarColor: "#8b5cf6",
-    dotColor: "bg-purple-500",
-    gradient: "from-purple-100 to-purple-200"
-  }
-};
 
 interface SupabasePanel {
     id: string;
