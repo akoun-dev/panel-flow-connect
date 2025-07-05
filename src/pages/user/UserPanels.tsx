@@ -49,8 +49,34 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { InvitePanelistsModal } from "@/components/panels/InvitePanelistsModal";
-import { STATUS_CONFIG } from "@/constants/statusConfig";
 
+const statusConfig = {
+  draft: { 
+    label: "Brouillon", 
+    color: "bg-slate-100 text-slate-700 border-slate-200",
+    dotColor: "bg-slate-400"
+  },
+  scheduled: { 
+    label: "Programmé", 
+    color: "bg-blue-100 text-blue-700 border-blue-200",
+    dotColor: "bg-blue-500"
+  },
+  live: { 
+    label: "En cours", 
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    dotColor: "bg-emerald-500"
+  },
+  completed: { 
+    label: "Terminé", 
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+    dotColor: "bg-purple-500"
+  },
+  cancelled: { 
+    label: "Annulé", 
+    color: "bg-red-100 text-red-700 border-red-200",
+    dotColor: "bg-red-500"
+  }
+};
 
 type ViewMode = 'grid' | 'list' | 'table';
 type SortBy = 'date' | 'title' | 'participants' | 'questions' | 'status';
@@ -598,7 +624,7 @@ export function UserPanels() {
     isActive,
     onClick
   }: {
-    status: keyof typeof STATUS_CONFIG | 'all'
+    status: keyof typeof statusConfig | 'all'
     count: number
     isActive: boolean
     onClick: () => void
@@ -613,14 +639,14 @@ export function UserPanels() {
         }
       `}
     >
-      <div className={`w-2 h-2 rounded-full ${STATUS_CONFIG[status]?.dotColor || 'bg-gray-400'}`} />
-      <span className="font-medium">{STATUS_CONFIG[status]?.label || 'Tous'}</span>
+      <div className={`w-2 h-2 rounded-full ${statusConfig[status]?.dotColor || 'bg-gray-400'}`} />
+      <span className="font-medium">{statusConfig[status]?.label || 'Tous'}</span>
       <Badge variant="secondary" className="text-xs">{count}</Badge>
     </button>
   );
 
   const PanelCard = ({ panel }: { panel: Panel }) => {
-    const statusInfo = STATUS_CONFIG[panel.status as keyof typeof STATUS_CONFIG];
+    const statusInfo = statusConfig[panel.status as keyof typeof statusConfig];
     const participationRate = getParticipationRate(panel.participants?.registered, panel.participants?.limit);
     const priority = getPriorityBadge(panel);
     const isSelected = selectedPanels.has(panel.id);
@@ -1078,12 +1104,12 @@ export function UserPanels() {
                   isActive={filter === "all"}
                   onClick={() => setFilter("all")}
                 />
-                {Object.entries(STATUS_CONFIG).map(([status, config]) => {
+                {Object.entries(statusConfig).map(([status, config]) => {
                   const count = panels.filter(p => p.status === status).length;
                   return (
                     <StatusFilter
                       key={status}
-                      status={status as keyof typeof STATUS_CONFIG}
+                      status={status as keyof typeof statusConfig}
                       count={count}
                       isActive={filter === status}
                       onClick={() => setFilter(status)}
@@ -1158,7 +1184,7 @@ export function UserPanels() {
                   <Badge
                     variant={managePanelModal.panel.status === "scheduled" ? "default" : "secondary"}
                   >
-                    {STATUS_CONFIG[managePanelModal.panel.status as keyof typeof STATUS_CONFIG]?.label}
+                    {statusConfig[managePanelModal.panel.status as keyof typeof statusConfig]?.label}
                   </Badge>
                 </div>
               </DialogHeader>

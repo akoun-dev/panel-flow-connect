@@ -150,25 +150,24 @@ export function LoginForm() {
                       className="hidden lg:flex lg:flex-col lg:justify-center lg:items-start lg:h-full space-y-6 xl:space-y-8 px-8 xl:px-16 2xl:px-24"
                   >
                       <div className="text-left">
-                          <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.2 }}
-                              className="inline-flex items-center gap-2 bg-[hsl(var(--primary)/0.1)] text-primary px-3 py-1.5 xl:px-4 xl:py-2 rounded-full text-xs xl:text-sm font-medium mb-4 xl:mb-6"
-                          >
-                              <Sparkles className="h-3 w-3 xl:h-4 xl:w-4" />
-                              Plateforme PanelFlow
+                          <motion.div className="mb-4 xl:mb-6">
+                              <img
+                                  src="/images/ivoiretech.png"
+                                  alt="IvoireTech"
+                                  className="w-64 xl:w-80 2xl:w-96"
+                              />
                           </motion.div>
 
-                          <motion.h1
+                          <motion.p
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: 0.3 }}
-                              className="text-3xl xl:text-4xl 2xl:text-5xl font-bold text-gray-900 mb-3 xl:mb-4"
+                              className="text-2xl xl:text-4xl 2xl:text-5xl font-bold text-gray-900 mb-3 xl:mb-4"
                           >
-                              Bienvenue sur
-                              <span className="text-gradient block">PanelFlow</span>
-                          </motion.h1>
+                              <span className="text-gradient block">
+                                  Connect. Boost. Impact
+                              </span>
+                          </motion.p>
 
                           <motion.p
                               initial={{ opacity: 0, y: 20 }}
