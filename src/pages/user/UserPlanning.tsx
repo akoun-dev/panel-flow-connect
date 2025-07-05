@@ -76,6 +76,18 @@ type PanelEvent = {
     moderators?: { name: string; avatar_url: string }[]
 }
 
+type PanelData = {
+    id: string
+    title: string
+    description: string
+    date: string
+    time: string
+    duration: number
+    status?: string
+}
+
+type IconComponent = React.ComponentType<{ className?: string }>
+
 const STATUS_CONFIG = {
   draft: {
     label: "Brouillon",
@@ -193,7 +205,7 @@ const StatCard = ({
 }: { 
   title: string; 
   value: string | number; 
-  icon: any; 
+  icon: IconComponent;
   trend?: string; 
   color?: string 
 }) => {
@@ -315,14 +327,19 @@ export default function UserPlanning() {
             if (showRefreshing) setRefreshing(true)
             else setLoading(true)
             
-            logger.debug('[DEBUG] Starting to fetch panels...')
+            logger.debug('[UserPlanning] Starting to fetch panels...')
             
             const authResult = await supabase.auth.getUser()
+            logger.debug('[UserPlanning] Auth result:', authResult)
+            
             const userId = authResult.data.user?.id
-            if (!userId) throw new Error("User ID not found")
+            if (!userId) {
+                logger.error('[UserPlanning] No user ID found')
+                throw new Error("User ID not found")
+            }
 
-            // Requête pour les panels acceptés
-            const { data, error } = await supabase
+            logger.debug('[UserPlanning] Fetching user_planning for user:', userId)
+            const { data, error, count } = await supabase
                 .from("user_planning")
                 .select(`
                     id,
@@ -339,7 +356,15 @@ export default function UserPlanning() {
                 .eq("user_id", userId)
                 .order('date', { ascending: true, referencedTable: 'panels' })
 
-            if (error) throw error
+            if (error) {
+                logger.error('[UserPlanning] Error fetching user_planning:', error)
+                throw error
+            }
+
+            logger.debug('[UserPlanning] Fetched user_planning data:', {
+                count: data?.length,
+                firstItem: data?.[0]
+            })
 
             const planningPanels: PanelEvent[] = (data as SupabasePanel[])
                 .filter(item => item.panels && item.panels.length > 0)
@@ -361,9 +386,17 @@ export default function UserPlanning() {
                 .eq('user_id', userId)
                 .order('date', { ascending: true })
 
-            if (ownError) throw ownError
+            if (ownError) {
+                logger.error('[UserPlanning] Error fetching own panels:', ownError)
+                throw ownError
+            }
 
-            const ownPanels: PanelEvent[] = (ownData as any[]).map(panel => ({
+            logger.debug('[UserPlanning] Fetched own panels:', {
+                count: ownData?.length,
+                firstItem: ownData?.[0]
+            })
+
+            const ownPanels: PanelEvent[] = (ownData as PanelData[]).map(panel => ({
                 id: panel.id,
                 panel_id: panel.id,
                 title: panel.title,
@@ -692,7 +725,7 @@ export default function UserPlanning() {
                                         </div>
                                     ) : (
                                         <div className="flex-1 relative">
-                                            <style jsx global>{`
+                                            <style>{`
                                                 .fc {
                                                     font-family: 'Inter', system-ui, sans-serif;
                                                 }
@@ -1000,7 +1033,9 @@ export default function UserPlanning() {
                                                     center: "title",
                                                     right: ""
                                                 }}
-                                                height="100%"
+                                                height="auto"
+                                                contentHeight="auto"
+                                                aspectRatio={2.0}
                                                 locale="fr"
                                                 firstDay={1}
                                                 weekNumbers={false}
@@ -1020,7 +1055,7 @@ export default function UserPlanning() {
                                                 dayHeaderFormat={{ weekday: 'short' }}
                                                 slotMinTime="06:00:00"
                                                 slotMaxTime="23:00:00"
-                                                expandRows={true}
+                                                expandRows={false}
                                                 stickyHeaderDates={true}
                                                 navLinks={true}
                                                 editable={false}
