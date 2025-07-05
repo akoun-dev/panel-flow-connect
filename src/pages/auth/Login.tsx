@@ -7,6 +7,7 @@ export function Login() {
       <div className="w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gradient mb-2">PANELFLOW</h1>
+          <p className="text-accent mb-2">Connect. Boost. Impact.</p>
           <p className="text-muted-foreground">Plateforme de gestion de panels</p>
         </div>
         <LoginForm />
