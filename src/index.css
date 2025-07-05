@@ -9,6 +9,10 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    --bleu-ivoire: 215 80% 55%;
+    --vert-ivoire: 148 58% 49%;
+    --cyan-ivoire: 189 70% 52%;
+    --vert-profond: 158 64% 33%;
     --background: 220 23% 97%;
     --foreground: 220 9% 15%;
 
@@ -18,16 +22,16 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 9% 15%;
 
-    --primary: 220 91% 48%;
+    --primary: var(--bleu-ivoire);
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: var(--vert-ivoire);
     --secondary-foreground: 220 47% 11%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 32 95% 58%;
+    --accent: var(--cyan-ivoire);
     --accent-foreground: 220 9% 15%;
 
     --destructive: 0 84.2% 60.2%;
@@ -35,18 +39,18 @@ All colors MUST be HSL.
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 220 91% 48%;
+    --ring: var(--bleu-ivoire);
 
     --radius: 0.75rem;
 
     --sidebar-background: 220 23% 97%;
     --sidebar-foreground: 220 9% 15%;
-    --sidebar-primary: 220 91% 48%;
+    --sidebar-primary: var(--bleu-ivoire);
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent: var(--cyan-ivoire);
     --sidebar-accent-foreground: 220 47% 11%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 220 91% 48%;
+    --sidebar-ring: var(--bleu-ivoire);
   }
 
   .dark {
@@ -59,16 +63,16 @@ All colors MUST be HSL.
     --popover: 220 23% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 220 91% 58%;
+    --primary: var(--bleu-ivoire);
     --primary-foreground: 220 23% 8%;
 
-    --secondary: 220 17% 15%;
+    --secondary: var(--vert-ivoire);
     --secondary-foreground: 210 40% 98%;
 
     --muted: 220 17% 15%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 32 95% 68%;
+    --accent: var(--cyan-ivoire);
     --accent-foreground: 220 23% 8%;
 
     --destructive: 0 62.8% 50%;
@@ -76,16 +80,16 @@ All colors MUST be HSL.
 
     --border: 220 17% 15%;
     --input: 220 17% 15%;
-    --ring: 220 91% 58%;
+    --ring: var(--bleu-ivoire);
 
     --sidebar-background: 220 23% 8%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 220 91% 58%;
+    --sidebar-primary: var(--bleu-ivoire);
     --sidebar-primary-foreground: 220 23% 8%;
-    --sidebar-accent: 220 17% 15%;
+    --sidebar-accent: var(--cyan-ivoire);
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 220 17% 15%;
-    --sidebar-ring: 220 91% 58%;
+    --sidebar-ring: var(--bleu-ivoire);
   }
 }
 
@@ -102,7 +106,10 @@ All colors MUST be HSL.
 
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    background: linear-gradient(135deg,
+        hsl(var(--bleu-ivoire)) 0%,
+        hsl(var(--cyan-ivoire)) 50%,
+        hsl(var(--vert-ivoire)) 100%);
   }
   
   .gradient-card {
@@ -110,7 +117,10 @@ All colors MUST be HSL.
   }
   
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    background: linear-gradient(135deg,
+        hsl(var(--bleu-ivoire)) 0%,
+        hsl(var(--cyan-ivoire)) 50%,
+        hsl(var(--vert-ivoire)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
