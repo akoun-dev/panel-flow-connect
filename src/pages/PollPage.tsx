@@ -661,7 +661,7 @@ export default function PollPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-white p-4 rounded-lg border">
-                    <PollQRCode pollId={pollId} size={200} />
+                    <PollQRCode pollId={pollId} size={200} url={window.location.origin} />
                   </div>
                   <p className="text-sm text-gray-600 text-center">
                     Scannez ce QR code avec votre smartphone pour participer
@@ -708,7 +708,7 @@ export default function PollPage() {
                       </DialogHeader>
                       <div className="text-center space-y-4">
                         <div className="bg-white p-6 rounded-lg border mx-auto inline-block">
-                          <PollQRCode pollId={pollId} size={250} />
+                          <PollQRCode pollId={pollId} size={250} url={window.location.origin} />
                         </div>
                         <p className="text-sm text-gray-600">
                           Partagez ce QR code pour permettre un accès rapide au sondage
