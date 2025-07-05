@@ -366,7 +366,7 @@ export function UserPanels() {
     setEditingPanelId(null);
   }, [user?.id]);
 
-  const handleFormChange = useCallback((field: keyof PanelFormData, value: any) => {
+  const handleFormChange = useCallback((field: keyof PanelFormData, value: string | number | boolean) => {
     setPanelForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
@@ -587,8 +587,7 @@ export function UserPanels() {
         toast.success(`Archivage en cours pour ${selectedPanels.size} panel(s)`);
         break;
       case 'delete':
-        const confirmDelete = window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedPanels.size} panel(s) ?`);
-        if (confirmDelete) {
+        if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedPanels.size} panel(s) ?`)) {
           toast.success(`Suppression en cours pour ${selectedPanels.size} panel(s)`);
         }
         break;
@@ -1241,7 +1240,7 @@ export function UserPanels() {
                       onClick={() => handleEditPanel(managePanelModal.panel!)}
                       className="flex items-center gap-2"
                     >
-                      <Settings className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                       Modifier
                     </Button>
                     <Button
@@ -1258,11 +1257,13 @@ export function UserPanels() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleInvitePanelists(managePanelModal.panel!)}
+                      onClick={() => {
+                        window.location.href = `/panel/${managePanelModal.panel!.id}/projection`;
+                      }}
                       className="flex items-center gap-2"
                     >
-                      <Users className="h-4 w-4" />
-                      Inviter
+                      <Play className="h-4 w-4" />
+                      Projection
                     </Button>
                     <Button
                       variant="outline"
@@ -1274,6 +1275,42 @@ export function UserPanels() {
                     >
                       <BarChart3 className="h-4 w-4" />
                       Sondages
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleInvitePanelists(managePanelModal.panel!)}
+                      className="flex items-center gap-2"
+                    >
+                      <Users className="h-4 w-4" />
+                      Inviter
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigator.clipboard.writeText(window.location.origin + `/panel/${managePanelModal.panel!.id}`)}
+                      className="flex items-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Partager
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toast.success("Export en cours...")}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Exporter
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toast.success("Duplication en cours...")}
+                      className="flex items-center gap-2"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Dupliquer
                     </Button>
                   </div>
                 </div>
