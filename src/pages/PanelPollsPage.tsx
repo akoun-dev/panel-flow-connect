@@ -749,7 +749,7 @@ export default function PanelPollsPage() {
                             QR Code
                           </h4>
                           <div className="bg-white p-3 rounded-lg border">
-                            <PollQRCode pollId={poll.id} />
+                            <PollQRCode pollId={poll.id} url={window.location.origin} />
                           </div>
                         </div>
                       )}
@@ -776,7 +776,7 @@ export default function PanelPollsPage() {
                                 <div className="grid lg:grid-cols-2 gap-6">
                                   <div>
                                     <h4 className="font-semibold mb-3">QR Code de partage</h4>
-                                    <PollQRCode pollId={poll.id} />
+                                    <PollQRCode pollId={poll.id} url={window.location.origin} />
                                   </div>
                                   <div>
                                     <h4 className="font-semibold mb-3">Résultats détaillés</h4>

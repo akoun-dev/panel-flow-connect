@@ -7,13 +7,18 @@ import { useToast } from '../ui/use-toast';
 interface PollQRCodeProps {
   pollId: string;
   size?: number;
+  /**
+   * Base URL to use when generating the QR code.
+   * Defaults to `window.location.origin` when not provided.
+   */
+  url?: string;
 }
 
-export default function PollQRCode({ pollId, size = 128 }: PollQRCodeProps) {
+export default function PollQRCode({ pollId, size = 128, url }: PollQRCodeProps) {
   const { toast } = useToast();
   const qrRef = useRef<HTMLDivElement>(null);
 
-  const qrValue = `${window.location.origin}/poll/${pollId}`;
+  const qrValue = `${url ?? window.location.origin}/poll/${pollId}`;
 
   const handleDownload = () => {
     if (!qrRef.current) return;
