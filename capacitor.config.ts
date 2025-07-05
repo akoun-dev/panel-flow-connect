@@ -15,7 +15,7 @@ const config: CapacitorConfig = {
   plugins: {
     // Barre de statut
     StatusBar: {
-      backgroundColor: '#ffffff', // Adaptez à votre thème
+      backgroundColor: 'hsl(0 0% 100%)', // Adaptez à votre thème
       style: 'Light', // ou 'Dark' selon votre design
       overlaysWebView: false
     },
@@ -24,14 +24,14 @@ const config: CapacitorConfig = {
     SafeArea: {
       enabled: true,
       customColorsForSystemBars: true,
-      statusBarBackgroundColor: '#ffffff',
-      navigationBarBackgroundColor: '#ffffff'
+      statusBarBackgroundColor: 'hsl(0 0% 100%)',
+      navigationBarBackgroundColor: 'hsl(0 0% 100%)'
     },
 
     // Écran de démarrage
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: '#ffffff',
+      backgroundColor: 'hsl(0 0% 100%)',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false

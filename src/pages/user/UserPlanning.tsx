@@ -252,9 +252,9 @@ export default function UserPlanning() {
                 end: new Date(
                     new Date(`${panel.date}T${panel.time}`).getTime() + panel.duration * 60000
                 ).toISOString(),
-                backgroundColor: statusInfo?.calendarColor || '#6b7280',
-                borderColor: statusInfo?.calendarColor || '#6b7280',
-                textColor: '#ffffff',
+                backgroundColor: statusInfo?.calendarColor || 'hsl(220 9% 46%)',
+                borderColor: statusInfo?.calendarColor || 'hsl(220 9% 46%)',
+                textColor: 'hsl(0 0% 100%)',
                 extendedProps: {
                     description: panel.description,
                     status: panel.status,
@@ -675,14 +675,14 @@ export default function UserPlanning() {
                                                 .fc-header-toolbar {
                                                     padding: 1rem 0;
                                                     margin-bottom: 1rem !important;
-                                                    border-bottom: 1px solid #e5e7eb;
+                                                    border-bottom: 1px solid hsl(220 13% 91%);
                                                 }
                                                 
                                                 .fc-toolbar-title {
                                                     font-size: 1.5rem !important;
                                                     font-weight: 700 !important;
-                                                    color: #1f2937 !important;
-                                                    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                                                    color: hsl(215 28% 17%) !important;
+                                                    background: linear-gradient(135deg, hsl(217 91% 60%), hsl(258 90% 66%));
                                                     -webkit-background-clip: text;
                                                     -webkit-text-fill-color: transparent;
                                                     background-clip: text;
@@ -690,8 +690,8 @@ export default function UserPlanning() {
                                                 
                                                 .fc-button {
                                                     background: white !important;
-                                                    border: 1px solid #d1d5db !important;
-                                                    color: #374151 !important;
+                                                    border: 1px solid hsl(216 12% 84%) !important;
+                                                    color: hsl(217 19% 27%) !important;
                                                     border-radius: 8px !important;
                                                     padding: 8px 12px !important;
                                                     font-weight: 500 !important;
@@ -700,28 +700,28 @@ export default function UserPlanning() {
                                                 }
                                                 
                                                 .fc-button:hover {
-                                                    background: #f9fafb !important;
-                                                    border-color: #9ca3af !important;
+                                                    background: hsl(210 20% 98%) !important;
+                                                    border-color: hsl(218 11% 65%) !important;
                                                     transform: translateY(-1px);
                                                     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
                                                 }
                                                 
                                                 .fc-button:focus,
                                                 .fc-button-active {
-                                                    background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
-                                                    border-color: #3b82f6 !important;
+                                                    background: linear-gradient(135deg, hsl(217 91% 60%), hsl(258 90% 66%)) !important;
+                                                    border-color: hsl(217 91% 60%) !important;
                                                     color: white !important;
                                                     box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39) !important;
                                                 }
                                                 
                                                 .fc-today-button {
-                                                    background: linear-gradient(135deg, #10b981, #059669) !important;
-                                                    border-color: #10b981 !important;
+                                                    background: linear-gradient(135deg, hsl(160 84% 39%), hsl(161 94% 30%)) !important;
+                                                    border-color: hsl(160 84% 39%) !important;
                                                     color: white !important;
                                                 }
                                                 
                                                 .fc-today-button:hover {
-                                                    background: linear-gradient(135deg, #059669, #047857) !important;
+                                                    background: linear-gradient(135deg, hsl(161 94% 30%), hsl(163 94% 24%)) !important;
                                                 }
                                                 
                                                 .fc-daygrid-day {
@@ -729,19 +729,19 @@ export default function UserPlanning() {
                                                 }
                                                 
                                                 .fc-daygrid-day:hover {
-                                                    background-color: #f0f9ff !important;
+                                                    background-color: hsl(204 100% 97%) !important;
                                                 }
                                                 
                                                 .fc-day-today {
-                                                    background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
-                                                    border: 2px solid #3b82f6 !important;
+                                                    background: linear-gradient(135deg, hsl(214 95% 93%), hsl(213 97% 87%)) !important;
+                                                    border: 2px solid hsl(217 91% 60%) !important;
                                                 }
                                                 
                                                 .fc-col-header-cell {
-                                                    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-                                                    border-color: #e2e8f0 !important;
+                                                    background: linear-gradient(135deg, hsl(210 40% 98%), hsl(210 40% 96%)) !important;
+                                                    border-color: hsl(214 32% 91%) !important;
                                                     font-weight: 600 !important;
-                                                    color: #475569 !important;
+                                                    color: hsl(215 19% 35%) !important;
                                                     text-transform: uppercase;
                                                     font-size: 0.75rem;
                                                     letter-spacing: 0.05em;
@@ -750,13 +750,13 @@ export default function UserPlanning() {
                                                 
                                                 .fc-daygrid-day-number {
                                                     font-weight: 600 !important;
-                                                    color: #374151 !important;
+                                                    color: hsl(217 19% 27%) !important;
                                                     padding: 8px !important;
                                                     transition: all 0.2s ease;
                                                 }
                                                 
                                                 .fc-day-today .fc-daygrid-day-number {
-                                                    background: #3b82f6 !important;
+                                                    background: hsl(217 91% 60%) !important;
                                                     color: white !important;
                                                     border-radius: 50% !important;
                                                     width: 32px !important;
@@ -797,7 +797,7 @@ export default function UserPlanning() {
                                                 }
                                                 
                                                 .fc-more-link {
-                                                    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+                                                    background: linear-gradient(135deg, hsl(239 84% 67%), hsl(258 90% 66%)) !important;
                                                     color: white !important;
                                                     border-radius: 12px !important;
                                                     padding: 2px 8px !important;
@@ -814,18 +814,18 @@ export default function UserPlanning() {
                                                 }
                                                 
                                                 .fc-timegrid-slot {
-                                                    border-color: #f3f4f6 !important;
+                                                    border-color: hsl(220 14% 96%) !important;
                                                     height: 3rem !important;
                                                 }
                                                 
                                                 .fc-timegrid-slot-label {
-                                                    color: #6b7280 !important;
+                                                    color: hsl(220 9% 46%) !important;
                                                     font-weight: 500 !important;
                                                     font-size: 0.75rem !important;
                                                 }
                                                 
                                                 .fc-timegrid-axis {
-                                                    background: #fafafa !important;
+                                                    background: hsl(0 0% 98%) !important;
                                                 }
                                                 
                                                 .fc-scrollgrid-sync-table {
@@ -857,22 +857,22 @@ export default function UserPlanning() {
                                                 .fc-popover {
                                                     border-radius: 12px !important;
                                                     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-                                                    border: 1px solid #e5e7eb !important;
+                                                    border: 1px solid hsl(220 13% 91%) !important;
                                                     backdrop-filter: blur(20px);
                                                     background: rgba(255, 255, 255, 0.95) !important;
                                                 }
                                                 
                                                 .fc-popover-header {
-                                                    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-                                                    border-bottom: 1px solid #e2e8f0 !important;
+                                                    background: linear-gradient(135deg, hsl(210 40% 98%), hsl(210 40% 96%)) !important;
+                                                    border-bottom: 1px solid hsl(214 32% 91%) !important;
                                                     padding: 12px 16px !important;
                                                     font-weight: 600 !important;
-                                                    color: #374151 !important;
+                                                    color: hsl(217 19% 27%) !important;
                                                 }
                                                 
                                                 /* Mode sombre pour certains événements */
                                                 .fc-event.event-live {
-                                                    background: linear-gradient(135deg, #10b981, #059669) !important;
+                                                    background: linear-gradient(135deg, hsl(160 84% 39%), hsl(161 94% 30%)) !important;
                                                     box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important;
                                                     animation: pulse 2s infinite;
                                                 }
@@ -883,18 +883,18 @@ export default function UserPlanning() {
                                                 }
                                                 
                                                 .fc-event.event-pending {
-                                                    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+                                                    background: linear-gradient(135deg, hsl(38 92% 50%), hsl(32 95% 44%)) !important;
                                                     box-shadow: 0 0 15px rgba(245, 158, 11, 0.3) !important;
                                                 }
                                                 
                                                 .fc-event.event-cancelled {
-                                                    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+                                                    background: linear-gradient(135deg, hsl(0 84% 60%), hsl(0 72% 51%)) !important;
                                                     opacity: 0.7;
                                                     text-decoration: line-through;
                                                 }
                                                 
                                                 .fc-event.event-completed {
-                                                    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+                                                    background: linear-gradient(135deg, hsl(258 90% 66%), hsl(262 83% 58%)) !important;
                                                     box-shadow: 0 0 15px rgba(139, 92, 246, 0.3) !important;
                                                 }
                                                 
@@ -1013,7 +1013,7 @@ export default function UserPlanning() {
                                                     const tooltip = `
                                                         <div style="
                                                             background: white;
-                                                            border: 1px solid #e5e7eb;
+                                                            border: 1px solid hsl(220 13% 91%);
                                                             border-radius: 8px;
                                                             padding: 12px;
                                                             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -1021,13 +1021,13 @@ export default function UserPlanning() {
                                                             font-size: 14px;
                                                             z-index: 1000;
                                                         ">
-                                                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">
+                                                            <div style="font-weight: 600; color: hsl(215 28% 17%); margin-bottom: 4px;">
                                                                 ${event.title}
                                                             </div>
-                                                            <div style="color: #6b7280; margin-bottom: 8px;">
+                                                            <div style="color: hsl(220 9% 46%); margin-bottom: 8px;">
                                                                 ${event.extendedProps?.description || 'Aucune description'}
                                                             </div>
-                                                            <div style="display: flex; align-items: center; gap: 8px; color: #374151;">
+                                                            <div style="display: flex; align-items: center; gap: 8px; color: hsl(217 19% 27%);">
                                                                 <span style="font-size: 12px;">⏰ ${event.start?.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                                                                 <span style="font-size: 12px;">⏱️ ${event.extendedProps?.duration}min</span>
                                                             </div>
@@ -1081,7 +1081,7 @@ export default function UserPlanning() {
                                                                 padding: 2px;
                                                                 width: 100%;
                                                             ">
-                                                                ${isLive ? '<span style="color: #ffffff; font-size: 10px;">🔴</span>' : ''}
+                                                                ${isLive ? '<span style="color: hsl(0 0% 100%); font-size: 10px;">🔴</span>' : ''}
                                                                 <div style="
                                                                     flex: 1;
                                                                     min-width: 0;
