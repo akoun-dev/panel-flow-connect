@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { STATUS_CONFIG } from "@/constants/statusConfig";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/lib/supabase";
 import { InvitePanelistsModal } from "@/components/panels/InvitePanelistsModal";
@@ -92,33 +93,6 @@ const formatTimeAgo = (dateString: string) => {
     return `${Math.floor(diffInHours / 24)}j`;
 };
 
-const statusConfig = {
-  draft: { 
-    label: "Brouillon", 
-    color: "bg-slate-100 text-slate-700 border-slate-200",
-    dotColor: "bg-slate-400"
-  },
-  scheduled: { 
-    label: "Programmé", 
-    color: "bg-blue-100 text-blue-700 border-blue-200",
-    dotColor: "bg-blue-500"
-  },
-  live: { 
-    label: "En cours", 
-    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    dotColor: "bg-emerald-500"
-  },
-  completed: { 
-    label: "Terminé", 
-    color: "bg-purple-100 text-purple-700 border-purple-200",
-    dotColor: "bg-purple-500"
-  },
-  cancelled: { 
-    label: "Annulé", 
-    color: "bg-red-100 text-red-700 border-red-200",
-    dotColor: "bg-red-500"
-  }
-};
 
 export function UserDashboard() {
     const { user } = useUser();
@@ -683,7 +657,7 @@ export function UserDashboard() {
     };
 
     const PanelCard = ({ panel }: { panel: Panel }) => {
-        const statusInfo = statusConfig[panel.status as keyof typeof statusConfig];
+        const statusInfo = STATUS_CONFIG[panel.status as keyof typeof STATUS_CONFIG];
         const priority = getPriorityBadge(panel);
         const isSelected = selectedPanels.has(panel.id);
 
@@ -1276,7 +1250,7 @@ export function UserDashboard() {
                                 <Badge
                                     variant={managePanelModal.panel.status === "scheduled" ? "default" : "secondary"}
                                 >
-                                    {statusConfig[managePanelModal.panel.status as keyof typeof statusConfig]?.label}
+                                    {STATUS_CONFIG[managePanelModal.panel.status as keyof typeof STATUS_CONFIG]?.label}
                                 </Badge>
                             </div>
                         </DialogHeader>
