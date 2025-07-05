@@ -76,6 +76,43 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Design system and color palette
+
+The UI theme is entirely driven by CSS variables declared in
+[`src/index.css`](src/index.css). The file defines a set of `--bleu-ivoire`,
+`--vert-ivoire`, `--cyan-ivoire` and `--vert-profond` variables which represent
+the brand colors in HSL form:
+
+- `--bleu-ivoire: 218 100% 33%`
+- `--vert-ivoire: 79 100% 42%`
+- `--cyan-ivoire: 192 100% 42%`
+- `--vert-profond: 172 100% 23%`
+
+These base colors are reused to define the rest of
+the tokens (`--primary`, `--secondary`, `--accent` and so on) that Tailwind maps
+to utility classes via `tailwind.config.ts`.
+
+Adjusting a value in `:root` instantly changes the light theme, while the
+`.dark` selector contains overrides for dark mode. Because components rely on
+`hsl(var(--token))` values, updating the palette does not require touching any
+component styles—only the variables need to be modified.
+
+```css
+:root {
+  --bleu-ivoire: 218 100% 33%;
+  --vert-ivoire: 79 100% 42%;
+  --cyan-ivoire: 192 100% 42%;
+  --vert-profond: 172 100% 23%;
+  --background: 220 23% 97%;
+  --foreground: 220 9% 15%;
+  /* …other tokens */
+}
+```
+
+To tweak the appearance, open `src/index.css`, locate the variables above and
+change their HSL values. The Tailwind classes will automatically pick up the
+new colors after a rebuild.
+
 ## Configuration locale
 
 1. Copiez le fichier `.env.example` en `.env` et renseignez vos clefs Supabase :
