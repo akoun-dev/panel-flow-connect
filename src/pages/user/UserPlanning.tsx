@@ -37,7 +37,9 @@ import {
     Download,
     Share2,
     Zap,
-    Star
+    Star,
+    Maximize2,
+    Minimize2
 } from "lucide-react"
 import { toast } from "react-hot-toast"
 import {
@@ -138,6 +140,7 @@ export default function UserPlanning() {
     const [showEventModal, setShowEventModal] = useState(false)
     const [selectedDate, setSelectedDate] = useState(new Date())
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+    const [fullScreen, setFullScreen] = useState(false)
 
     useEffect(() => {
         const fetchAcceptedPanels = async () => {
@@ -342,6 +345,7 @@ export default function UserPlanning() {
     return (
         <div className="w-full h-full bg-gray-50 flex">
             {/* Sidebar */}
+            {!fullScreen && (
             <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-80'}`}>
                 <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
@@ -513,6 +517,7 @@ export default function UserPlanning() {
                     </div>
                 )}
             </div>
+            )}
 
             {/* Zone principale */}
             <div className="flex-1 flex flex-col">
@@ -562,13 +567,20 @@ export default function UserPlanning() {
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
+                            <Button variant="outline" onClick={() => setFullScreen(!fullScreen)}>
+                                {fullScreen ? (
+                                    <Minimize2 className="h-4 w-4" />
+                                ) : (
+                                    <Maximize2 className="h-4 w-4" />
+                                )}
+                            </Button>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex-1 p-6 space-y-6">
+                <div className="flex-1 p-6 space-y-6 flex flex-col">
                     {/* Timeline du jour */}
-                    {todayEvents.length > 0 && (
+                    {!fullScreen && todayEvents.length > 0 && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2">
@@ -612,8 +624,8 @@ export default function UserPlanning() {
                     )}
 
                     {/* Calendrier principal */}
-                    <Card className="flex-1">
-                        <CardContent className="p-6">
+                    <Card className="flex-1 h-full">
+                        <CardContent className="p-6 h-full">
                             {filteredPanels.length === 0 ? (
                                 <div className="text-center py-12">
                                     <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
@@ -660,7 +672,7 @@ export default function UserPlanning() {
                                         center: "title",
                                         right: ""
                                     }}
-                                    height="auto"
+                                    height="100%"
                                     locale="fr"
                                     firstDay={1}
                                     eventDisplay="block"
