@@ -9,10 +9,10 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --bleu-ivoire: 215 80% 55%;
-    --vert-ivoire: 148 58% 49%;
-    --cyan-ivoire: 189 70% 52%;
-    --vert-profond: 158 64% 33%;
+    --bleu-ivoire: 218 100% 33%;
+    --vert-ivoire: 79 100% 42%;
+    --cyan-ivoire: 192 100% 42%;
+    --vert-profond: 172 100% 23%;
     --background: 220 23% 97%;
     --foreground: 220 9% 15%;
 
