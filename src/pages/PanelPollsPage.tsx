@@ -254,6 +254,46 @@ export default function PanelPollsPage() {
     }
   }, [toast]);
 
+  const handleSharePoll = useCallback(
+    async (poll: ExtendedPoll) => {
+      const url = `${window.location.origin}/poll/${poll.id}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ url });
+          return;
+        } catch (err) {
+          // ignore and fallback to clipboard
+        }
+      }
+
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({
+          title: "Lien copié",
+          description:
+            "Le lien du sondage a été copié dans le presse-papiers",
+        });
+      } catch (err) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de partager le lien du sondage",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast]
+  );
+
+  const handleExportPoll = useCallback(
+    (poll: ExtendedPoll) => {
+      toast({
+        title: "Export", 
+        description: `Export du sondage "${poll.question}" en cours...`,
+      });
+    },
+    [toast]
+  );
+
   const handleBulkAction = (action: string) => {
     if (selectedPolls.size === 0) return;
     
@@ -713,11 +753,11 @@ export default function PanelPollsPage() {
                           <Copy className="h-4 w-4 mr-2" />
                           Copier le lien
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSharePoll(poll)}>
                           <Share2 className="h-4 w-4 mr-2" />
                           Partager
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportPoll(poll)}>
                           <Download className="h-4 w-4 mr-2" />
                           Exporter les résultats
                         </DropdownMenuItem>
@@ -830,11 +870,11 @@ export default function PanelPollsPage() {
                 
                 {viewMode !== 'compact' && (
                   <div className="flex gap-2 pt-4 border-t">
-                    <Button variant="outline" size="sm" onClick={() => handleCopyLink(poll.id)}>
+                    <Button variant="outline" size="sm" onClick={() => handleSharePoll(poll)}>
                       <Share2 className="h-4 w-4 mr-2" />
                       Partager
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleExportPoll(poll)}>
                       <Download className="h-4 w-4 mr-2" />
                       Exporter
                     </Button>
