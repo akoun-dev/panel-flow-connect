@@ -24,7 +24,7 @@ export function PanelQRCode({ panel, size = 128, url }: PanelQRCodeProps) {
         : `${window.location.origin}${panel.qr_code_url}`;
     }
 
-    return `${window.location.origin}/panel/${panel.id}/questions`;
+    return `${window.location.origin}/panel/${panel.id}/polls`;
   }, [panel.id, panel.qr_code_url, url]);
 
   const handleDownload = () => {

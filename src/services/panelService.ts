@@ -28,7 +28,7 @@ export const PanelService = {
     }
   ) {
     const generatedId = crypto.randomUUID();
-    const qrUrl = `${window.location.origin}/panel/${generatedId}/questions`;
+    const qrUrl = `${window.location.origin}/panel/${generatedId}/polls`;
 
     const { data, error } = await supabase
       .from('panels')
