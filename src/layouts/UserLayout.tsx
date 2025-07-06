@@ -26,7 +26,7 @@ const panelistMenuItems = [
     { title: "TABLEAU DE BORD", url: "/dashboard", icon: LayoutDashboard },
     { title: "MES PANELS", url: "/panels", icon: MessageSquare },
     { title: "MES INVITATIONS", url: "/invitations", icon: MessageSquare },
-    // { title: "MES SESSIONS", url: "/sessions", icon: Mic },
+    { title: "MES SESSIONS", url: "/sessions", icon: Mic },
     { title: "PLANNING", url: "/planning", icon: Calendar },
     // { title: "MES QUESTIONS", url: "/questions", icon: MessageSquare },
     // { title: "MES NOTES (IA)", url: "/notes", icon: FileText },
