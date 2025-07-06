@@ -22,7 +22,7 @@ export default function JoinPanel() {
           .single();
         if (error || !data) throw error || new Error('Invalid token');
         await PanelInvitationService.acceptInvitation(data.id, user.id);
-        navigate(`/user/panels`);
+        navigate(`/panel-questions?panel=${data.panel_id}`);
       } catch (err) {
         toast.error("Invitation invalide");
         navigate('/user/invitations');

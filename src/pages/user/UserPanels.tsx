@@ -101,6 +101,7 @@ interface PanelFormData {
 
 export function UserPanels() {
   const { user } = useUser();
+  const [hasOwnPanel, setHasOwnPanel] = useState(false);
   
   // États principaux
   const [panels, setPanels] = useState<Panel[]>([]);
@@ -175,6 +176,11 @@ export function UserPanels() {
   useEffect(() => {
     setHasUnsavedChanges(checkForUnsavedChanges());
   }, [checkForUnsavedChanges]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    PanelService.hasOwnPanel(user.id, user.email).then(setHasOwnPanel).catch(() => setHasOwnPanel(false));
+  }, [user]);
 
   // Notifications en temps réel
   useEffect(() => {
@@ -863,6 +869,14 @@ export function UserPanels() {
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (!hasOwnPanel) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Accès interdit
       </div>
     );
   }
