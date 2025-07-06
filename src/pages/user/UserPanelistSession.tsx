@@ -708,11 +708,11 @@ export default function PanelistSessions() {
       setShowNewSessionDialog(false);
       refetch();
 
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch (error: any) {
+      console.error('Erreur lors de la sauvegarde:', error.message, error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de sauvegarder la session',
+        description: `Impossible de sauvegarder la session${error?.message ? `: ${error.message}` : ''}`,
         variant: 'destructive'
       });
     }
