@@ -16,7 +16,7 @@ import {
   Pause,
   Calendar
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import SessionService from "@/services/sessionService";
 import { useUser } from "@/hooks/useUser";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -30,6 +30,7 @@ interface PanelSession {
   participants: number;
   questions: number;
   duration: string;
+  allocatedTime?: number | null;
   start_time: string;
   end_time: string;
   timeRemaining: string;
@@ -50,46 +51,9 @@ export function UserSessions() {
       if (!user?.email) return;
 
       try {
-        const { data, error } = await supabase
-          .from('panel_invitations')
-          .select(`
-            panels!inner(
-              id,
-              title,
-              description,
-              theme,
-              start_time,
-              end_time,
-              status,
-              user_id,
-              users!user_id(
-                first_name,
-                last_name,
-                email
-              )
-            )
-          `)
-          .eq('panelist_email', user.email)
-          .eq('status', 'accepted');
+        const sessionsData = await SessionService.getSessionsForPanelist(user.email);
 
-        if (error) throw error;
-
-        const formattedSessions = (data as unknown as Array<{ panels: {
-          id: string;
-          title: string;
-          description: string;
-          theme: string;
-          start_time: string;
-          end_time: string;
-          status: "live" | "scheduled" | "completed";
-          user_id: string;
-          users: {
-            first_name: string;
-            last_name: string;
-            email: string;
-          };
-        }}>).map((item) => {
-          const panel = item.panels;
+        const formattedSessions = sessionsData.map((panel) => {
           const now = new Date();
           const startDate = new Date(panel.start_time);
           const endDate = new Date(panel.end_time);
@@ -100,18 +64,19 @@ export function UserSessions() {
             : 'Terminé';
 
           return {
-            id: panel.id,
+            id: panel.panel_id,
             title: panel.title,
             description: panel.description,
             theme: panel.theme,
-            status: panel.status,
+            status: panel.status as "live" | "scheduled" | "completed",
             participants: 0,
             questions: 0,
-            duration: calculateDuration(panel.start_time, panel.end_time),
-            start_time: panel.start_time,
-            end_time: panel.end_time,
+            duration: calculateDuration(panel.start_time ?? '', panel.end_time ?? ''),
+            start_time: panel.start_time ?? '',
+            end_time: panel.end_time ?? '',
+            allocatedTime: panel.allocated_time,
             timeRemaining,
-            moderator: `${panel.users.first_name} ${panel.users.last_name}`.trim() || panel.users.email,
+            moderator: panel.moderator,
             moderator_avatar: undefined
           };
         });
@@ -232,6 +197,9 @@ export function UserSessions() {
                   <Clock className="h-6 w-6 mx-auto text-red-600 mb-2" />
                   <div className="font-bold text-2xl text-red-900">{session.timeRemaining}</div>
                   <div className="text-sm text-red-600">restantes</div>
+                  {session.allocatedTime !== undefined && (
+                    <div className="text-sm text-red-600">Temps alloué: {session.allocatedTime} min</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -276,6 +244,12 @@ export function UserSessions() {
                     <Users className="h-4 w-4" />
                     {session.participants} participants
                   </div>
+                  {session.allocatedTime !== undefined && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {session.allocatedTime} min allouées
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
