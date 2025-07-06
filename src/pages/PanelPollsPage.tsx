@@ -55,7 +55,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import PollQRCode from '@/components/polls/PollQRCode';
+import PollsQRCode from '@/components/polls/PollsQRCode';
 import { PollCreator } from '@/components/polls/PollCreator';
 import { PollEditor } from '@/components/polls/PollEditor';
 import type { Poll } from '@/types/poll';
@@ -535,6 +535,10 @@ export default function PanelPollsPage() {
         </Card>
       </div>
 
+      <div className="flex justify-center">
+        <PollsQRCode panelId={panelId} url={window.location.origin} />
+      </div>
+
       {/* Barre d'outils */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-3 flex-1">
@@ -782,17 +786,7 @@ export default function PanelPollsPage() {
                     <PollStats poll={poll} />
                     
                     <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
-                      {viewMode === 'list' && (
-                        <div className="lg:col-span-1">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                            <Share2 className="h-4 w-4 mr-2" />
-                            QR Code
-                          </h4>
-                          <div className="bg-white p-3 rounded-lg border">
-                            <PollQRCode pollId={poll.id} url={window.location.origin} />
-                          </div>
-                        </div>
-                      )}
+
                       
                       <div className={viewMode === 'list' ? 'lg:col-span-2' : ''}>
                         <div className="flex items-center justify-between mb-3">
@@ -814,10 +808,6 @@ export default function PanelPollsPage() {
                               <div className="space-y-6">
                                 <PollStats poll={poll} />
                                 <div className="grid lg:grid-cols-2 gap-6">
-                                  <div>
-                                    <h4 className="font-semibold mb-3">QR Code de partage</h4>
-                                    <PollQRCode pollId={poll.id} url={window.location.origin} />
-                                  </div>
                                   <div>
                                     <h4 className="font-semibold mb-3">Résultats détaillés</h4>
                                     <PollResults poll={poll} />
