@@ -759,70 +759,83 @@ export function UserDashboard() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuLabel>Actions principales</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleManagePanel(panel)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Voir détails
-                                </DropdownMenuItem>
-                                {panel.userRole === 'créateur' && (
-                                    <DropdownMenuItem onClick={() => handleEditPanel(panel)}>
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Modifier
-                                    </DropdownMenuItem>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Navigation</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => {
-                                    window.location.href = `/panel-questions?panel=${panel.id}`;
-                                }}>
-                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                    Questions ({panel.questions || 0})
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => {
-                                    window.location.href = `/panel/${panel.id}/polls`;
-                                }}>
-                                    <BarChart3 className="h-4 w-4 mr-2" />
-                                    Sondages
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => {
-                                    window.location.href = `/panel/${panel.id}/projection`;
-                                }}>
-                                    <Play className="h-4 w-4 mr-2" />
-                                    Mode projection
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Collaboration</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleInvitePanelists(panel)}>
-                                    <Mail className="h-4 w-4 mr-2" />
-                                    Inviter des panélistes
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleSharePanel(panel)}>
-                                    <Share2 className="h-4 w-4 mr-2" />
-                                    Partager le panel
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleCopyLink(panel)}>
-                                    <Copy className="h-4 w-4 mr-2" />
-                                    Copier le lien
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Outils</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleExportPanel(panel)}>
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Exporter les données
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDuplicatePanel(panel)}>
-                                    <Copy className="h-4 w-4 mr-2" />
-                                    Dupliquer le panel
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                {panel.userRole === 'créateur' && (
-                                    <DropdownMenuItem 
-                                        className="text-red-600"
-                                        onClick={() => handleDeletePanel(panel)}
+                                {panel.userRole === 'panéliste' ? (
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            window.location.href = `/panel-questions?panel=${panel.id}`;
+                                        }}
                                     >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Supprimer
+                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                        Questions
                                     </DropdownMenuItem>
+                                ) : (
+                                    <>
+                                        <DropdownMenuLabel>Actions principales</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => handleManagePanel(panel)}>
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            Voir détails
+                                        </DropdownMenuItem>
+                                        {panel.userRole === 'créateur' && (
+                                            <DropdownMenuItem onClick={() => handleEditPanel(panel)}>
+                                                <Edit className="h-4 w-4 mr-2" />
+                                                Modifier
+                                            </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => {
+                                            window.location.href = `/panel-questions?panel=${panel.id}`;
+                                        }}>
+                                            <MessageSquare className="h-4 w-4 mr-2" />
+                                            Questions ({panel.questions || 0})
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => {
+                                            window.location.href = `/panel/${panel.id}/polls`;
+                                        }}>
+                                            <BarChart3 className="h-4 w-4 mr-2" />
+                                            Sondages
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => {
+                                            window.location.href = `/panel/${panel.id}/projection`;
+                                        }}>
+                                            <Play className="h-4 w-4 mr-2" />
+                                            Mode projection
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuLabel>Collaboration</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => handleInvitePanelists(panel)}>
+                                            <Mail className="h-4 w-4 mr-2" />
+                                            Inviter des panélistes
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleSharePanel(panel)}>
+                                            <Share2 className="h-4 w-4 mr-2" />
+                                            Partager le panel
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleCopyLink(panel)}>
+                                            <Copy className="h-4 w-4 mr-2" />
+                                            Copier le lien
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuLabel>Outils</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => handleExportPanel(panel)}>
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Exporter les données
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleDuplicatePanel(panel)}>
+                                            <Copy className="h-4 w-4 mr-2" />
+                                            Dupliquer le panel
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        {panel.userRole === 'créateur' && (
+                                            <DropdownMenuItem
+                                                className="text-red-600"
+                                                onClick={() => handleDeletePanel(panel)}
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Supprimer
+                                            </DropdownMenuItem>
+                                        )}
+                                    </>
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -831,30 +844,35 @@ export function UserDashboard() {
 
                 <CardContent className="pt-0">
                     <div className="flex gap-2 pt-2 border-t">
-                        <Button
-                            size="sm"
-                            className="flex-1 bg-blue-600 hover:bg-blue-700"
-                            onClick={() => handleManagePanel(panel)}
-                        >
-                            <Settings className="h-4 w-4 mr-2" />
-                            Gérer
-                        </Button>
+                        {panel.userRole !== 'panéliste' && (
+                            <Button
+                                size="sm"
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                onClick={() => handleManagePanel(panel)}
+                            >
+                                <Settings className="h-4 w-4 mr-2" />
+                                Gérer
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
                                 window.location.href = `/panel-questions?panel=${panel.id}`;
                             }}
+                            className={panel.userRole === 'panéliste' ? 'flex-1' : ''}
                         >
                             <MessageSquare className="h-4 w-4" />
                         </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSharePanel(panel)}
-                        >
-                            <Share2 className="h-4 w-4" />
-                        </Button>
+                        {panel.userRole !== 'panéliste' && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSharePanel(panel)}
+                            >
+                                <Share2 className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -923,25 +941,27 @@ export function UserDashboard() {
                                     <Zap className="h-5 w-5 text-orange-500" />
                                     Prochain Panel
                                 </CardTitle>
-                                <div className="flex gap-2">
-                                    <Button 
-                                        size="sm" 
-                                        variant="outline"
-                                        onClick={() => handleManagePanel(userData.nextPanel!)}
-                                    >
-                                        <Settings className="h-4 w-4 mr-2" />
-                                        Gérer
-                                    </Button>
-                                    <Button 
-                                        size="sm"
-                                        onClick={() => {
-                                            window.location.href = `/panel-questions?panel=${userData.nextPanel!.id}`;
-                                        }}
-                                    >
-                                        <MessageSquare className="h-4 w-4 mr-2" />
-                                        Questions ({userData.nextPanel?.questions || 0})
-                                    </Button>
-                                </div>
+                                  <div className="flex gap-2">
+                                      {userData.nextPanel.userRole !== 'panéliste' && (
+                                          <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => handleManagePanel(userData.nextPanel!)}
+                                          >
+                                              <Settings className="h-4 w-4 mr-2" />
+                                              Gérer
+                                          </Button>
+                                      )}
+                                      <Button
+                                          size="sm"
+                                          onClick={() => {
+                                              window.location.href = `/panel-questions?panel=${userData.nextPanel!.id}`;
+                                          }}
+                                      >
+                                          <MessageSquare className="h-4 w-4 mr-2" />
+                                          Questions ({userData.nextPanel?.questions || 0})
+                                      </Button>
+                                  </div>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -976,34 +996,38 @@ export function UserDashboard() {
                                 </div>
                                 <div className="flex items-center justify-end">
                                     <div className="flex gap-2">
-                                        <Button 
-                                            size="sm" 
-                                            variant="outline"
-                                            onClick={() => {
-                                                window.location.href = `/panel/${userData.nextPanel!.id}/projection`;
-                                            }}
-                                        >
-                                            <Play className="h-4 w-4 mr-2" />
-                                            Projection
-                                        </Button>
-                                        <Button 
-                                            size="sm" 
-                                            variant="outline"
-                                            onClick={() => {
-                                                window.location.href = `/panel/${userData.nextPanel!.id}/polls`;
-                                            }}
-                                        >
-                                            <BarChart3 className="h-4 w-4 mr-2" />
-                                            Sondages
-                                        </Button>
-                                        <Button 
-                                            size="sm" 
-                                            variant="outline"
-                                            onClick={() => handleInvitePanelists(userData.nextPanel!)}
-                                        >
-                                            <Mail className="h-4 w-4 mr-2" />
-                                            Inviter
-                                        </Button>
+                                        {userData.nextPanel.userRole !== 'panéliste' && (
+                                            <>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        window.location.href = `/panel/${userData.nextPanel!.id}/projection`;
+                                                    }}
+                                                >
+                                                    <Play className="h-4 w-4 mr-2" />
+                                                    Projection
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        window.location.href = `/panel/${userData.nextPanel!.id}/polls`;
+                                                    }}
+                                                >
+                                                    <BarChart3 className="h-4 w-4 mr-2" />
+                                                    Sondages
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleInvitePanelists(userData.nextPanel!)}
+                                                >
+                                                    <Mail className="h-4 w-4 mr-2" />
+                                                    Inviter
+                                                </Button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
