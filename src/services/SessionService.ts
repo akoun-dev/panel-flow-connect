@@ -12,6 +12,19 @@ const SessionService = {
     if (error) throw error;
     return (data as Session[]) || [];
   },
+
+  async insert(
+    session: Omit<Session, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<Session> {
+    const { data, error } = await supabase
+      .from('sessions')
+      .insert(session)
+      .select()
+      .single();
+
+    if (error || !data) throw error;
+    return data as Session;
+  },
 };
 
 export default SessionService;
