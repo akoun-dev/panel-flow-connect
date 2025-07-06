@@ -16,7 +16,7 @@ import {
   Pause,
   Calendar
 } from "lucide-react";
-import SessionService from "@/services/sessionService";
+import SessionService from "@/services/SessionService";
 import type { Session } from "@/types/session";
 import { useUser } from "@/hooks/useUser";
 import { useToast } from "@/components/ui/use-toast";
