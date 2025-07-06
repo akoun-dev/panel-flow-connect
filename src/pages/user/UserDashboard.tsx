@@ -1195,12 +1195,12 @@ export function UserDashboard() {
                                     <Button
                                         size="sm"
                                         onClick={() => {
-                                            window.location.href = `/panel?panel=${
+                                            window.location.href = `/panel/${
                                                 userData.nextPanel!.id
-                                            }`
+                                            }/session`
                                         }}
                                     >
-                                        < Play className="h-4 w-4 mr-2" />
+                                        <Play className="h-4 w-4 mr-2" />
                                         Ma session (
                                         {userData.nextPanel?.questions || 0})
                                     </Button>

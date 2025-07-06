@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from "@/lib/supabase";
 import { logger } from "@/lib/logger";
 import { useUser } from "@/hooks/useUser";
@@ -625,8 +625,7 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
 
 // Composant principal
 export default function PanelistSessions() {
-  const [searchParams] = useSearchParams();
-  const panelId = searchParams.get('panel');
+  const { panelId } = useParams<{ panelId: string }>();
   const { user } = useUser();
   
   // États pour la session en cours
