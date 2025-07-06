@@ -17,6 +17,7 @@ import {
   Calendar
 } from "lucide-react";
 import SessionService from "@/services/sessionService";
+import type { Session } from "@/types/session";
 import { useUser } from "@/hooks/useUser";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -42,16 +43,19 @@ export function UserSessions() {
   const { user } = useUser();
   const { toast } = useToast();
   const [sessions, setSessions] = useState<PanelSession[]>([]);
+  const [recordedSessions, setRecordedSessions] = useState<Session[]>([]);
+  const [view, setView] = useState<'upcoming' | 'recorded'>('upcoming');
   const [loading, setLoading] = useState(true);
   const [micEnabled, setMicEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
 
   useEffect(() => {
-    const fetchAcceptedPanels = async () => {
+    const fetchSessionsData = async () => {
       if (!user?.email) return;
 
       try {
         const sessionsData = await SessionService.getSessionsForPanelist(user.email);
+        const recorded = await SessionService.getRecordedSessions(user.email);
 
         const formattedSessions = sessionsData.map((panel) => {
           const now = new Date();
@@ -82,6 +86,7 @@ export function UserSessions() {
         });
 
         setSessions(formattedSessions);
+        setRecordedSessions(recorded);
       } catch (error) {
         toast({
           title: 'Erreur',
@@ -94,7 +99,7 @@ export function UserSessions() {
       }
     };
 
-    fetchAcceptedPanels();
+    fetchSessionsData();
   }, [user?.email]);
 
   const calculateDuration = (start: string, end: string) => {
@@ -130,8 +135,26 @@ export function UserSessions() {
           <h1 className="text-2xl font-bold">Mes Sessions</h1>
           <p className="text-muted-foreground mt-1">Gérez vos participations aux panels</p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={view === 'upcoming' ? 'default' : 'outline'}
+            onClick={() => setView('upcoming')}
+          >
+            À venir
+          </Button>
+          <Button
+            size="sm"
+            variant={view === 'recorded' ? 'default' : 'outline'}
+            onClick={() => setView('recorded')}
+          >
+            Enregistrées
+          </Button>
+        </div>
       </div>
 
+      {view === 'upcoming' && (
+        <>
       {/* Session en cours - vue détaillée */}
       {sessions.filter(s => s.status === 'live').map(session => (
         <Card key={session.id} className="w-full border-red-200 bg-red-50">
@@ -216,7 +239,7 @@ export function UserSessions() {
             </div>
           </CardContent>
         </Card>
-      ))}
+        ))}
 
       {/* Autres sessions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -284,6 +307,59 @@ export function UserSessions() {
           </Card>
         ))}
       </div>
+        </>
+      )}
+
+      {view === 'recorded' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {recordedSessions.map(session => (
+            <Card key={session.id} className="w-full hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{session.title}</CardTitle>
+                    {session.description && (
+                      <CardDescription>{session.description}</CardDescription>
+                    )}
+                  </div>
+                  <Badge className={session.status === 'completed' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-blue-100 text-blue-700 border-blue-300'}>
+                    {session.status === 'completed' ? 'Terminé' : session.status === 'transcribing' ? 'Transcription' : 'Brouillon'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(session.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {Math.round(session.duration / 60)} min
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-xs">
+                        {session.panelist_name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm text-gray-600">{session.panelist_name}</span>
+                  </div>
+                  <div>
+                    {session.transcript ? (
+                      <Badge variant="outline" className="text-xs">Transcript disponible</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs">Pas de transcript</Badge>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
