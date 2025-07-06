@@ -38,7 +38,7 @@ import Questions from "./pages/Questions";
 import JoinPanel from "./pages/JoinPanel";
 import Projection from "./pages/Projection";
 import PollPage from "./pages/PollPage";
-
+import PanelistSession from '@/pages/user/UserPanelistSession';
 
 import ProjectionWrapper from "@/components/ProjectionWrapper";
 import PanelPollsPage from "./pages/PanelPollsPage";
@@ -116,6 +116,7 @@ const App = () => {
               <Route path="profile" element={<UserProfile />} />
               <Route path="invitations" element={<UserInvitation />} />
               <Route path="panel-questions" element={<UserPanelQuestions />} />
+              <Route path="/panel/:panelId/session" element={<PanelistSession />}/>
               <Route path="/panel/:panelId/polls" element={<PanelPollsPage />} />
             </Route>
 

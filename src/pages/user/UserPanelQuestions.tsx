@@ -1,4 +1,4 @@
-import { useState, useEffect, useDebugValue } from 'react';
+import { useState, useEffect } from 'react'; // Supprimé useDebugValue inutilisé
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from 'react-router-dom';
@@ -77,11 +77,9 @@ interface Question {
 export default function UserPanelQuestions() {
   const [searchParams] = useSearchParams();
   const panelId = searchParams.get('panel');
+  const { user } = useUser();
   
-  // Debug logs
-  useEffect(() => {
-    console.log('UserPanelQuestions component mounted with panelId:', panelId);
-  }, [panelId]);
+  // TOUS les useState doivent être au début, avant tout autre hook
   const [realtimeStatus, setRealtimeStatus] = useState<string>('disconnected');
   const [panelTitle, setPanelTitle] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -93,36 +91,13 @@ export default function UserPanelQuestions() {
   const [panelOwnerId, setPanelOwnerId] = useState<string>('');
   const [moderatorEmail, setModeratorEmail] = useState<string>('');
   const [polls, setPolls] = useState<Poll[]>([]);
-  const { user } = useUser();
-  const isPanelAdmin =
-    !!user && (user.id === panelOwnerId || user.email === moderatorEmail);
-  
-  useEffect(() => {
-    const fetchPanelTitle = async () => {
-      if (!panelId) return;
-      const { data } = await supabase
-        .from('panels')
-        .select('title, description, created_at, panelists, user_id, moderator_email')
-        .eq('id', panelId)
-        .single();
-      setPanelTitle(data?.title || '');
-      setPanelists((data?.panelists as Panelist[]) || []);
-      setPanelOwnerId(data?.user_id || '');
-      setModeratorEmail(data?.moderator_email || '');
-    };
-    const fetchPolls = async () => {
-      if (!panelId) return;
-      const { data, error } = await supabase
-        .from('polls')
-        .select('id, panel_id, question, created_at')
-        .eq('panel_id', panelId)
-        .order('created_at', { ascending: false });
-      if (!error && data) setPolls(data as Poll[]);
-    };
-    fetchPanelTitle();
-    fetchPolls();
-  }, [panelId]);
 
+  // Calculer isPanelAdmin de manière stable
+  const isPanelAdmin = Boolean(
+    user && (user.id === panelOwnerId || user.email === moderatorEmail)
+  );
+
+  // useQuery doit être appelé de manière inconditionnelle
   const { data: questions = [], isLoading, error, refetch } = useQuery<Question[]>({
     queryKey: ['panel-questions', panelId],
     queryFn: async () => {
@@ -141,6 +116,51 @@ export default function UserPanelQuestions() {
     refetchOnWindowFocus: false
   });
 
+  // TOUS les useEffect doivent être appelés de manière inconditionnelle
+  // useEffect pour les logs de debug
+  useEffect(() => {
+    console.log('UserPanelQuestions component mounted with panelId:', panelId);
+  }, [panelId]);
+
+  // useEffect pour fetch panel title et polls
+  useEffect(() => {
+    const fetchPanelData = async () => {
+      if (!panelId) return;
+      
+      try {
+        // Fetch panel info
+        const { data: panelData } = await supabase
+          .from('panels')
+          .select('title, description, created_at, panelists, user_id, moderator_email')
+          .eq('id', panelId)
+          .single();
+
+        if (panelData) {
+          setPanelTitle(panelData.title || '');
+          setPanelists((panelData.panelists as Panelist[]) || []);
+          setPanelOwnerId(panelData.user_id || '');
+          setModeratorEmail(panelData.moderator_email || '');
+        }
+
+        // Fetch polls
+        const { data: pollsData, error: pollsError } = await supabase
+          .from('polls')
+          .select('id, panel_id, question, created_at')
+          .eq('panel_id', panelId)
+          .order('created_at', { ascending: false });
+
+        if (!pollsError && pollsData) {
+          setPolls(pollsData as Poll[]);
+        }
+      } catch (error) {
+        console.error('Error fetching panel data:', error);
+      }
+    };
+
+    fetchPanelData();
+  }, [panelId]);
+
+  // useEffect pour realtime subscription
   useEffect(() => {
     if (!panelId) return;
 
@@ -171,6 +191,14 @@ export default function UserPanelQuestions() {
       supabase.removeChannel(subscription);
     };
   }, [panelId, refetch]);
+
+  // useEffect pour logs admin (doit être appelé inconditionnellement)
+  useEffect(() => {
+    if (panelId && isPanelAdmin) {
+      console.log('Rendering UserPanelQuestions - isPanelAdmin:', isPanelAdmin, 'panelId:', panelId);
+      console.log('Admin view - Rendering PollCreator');
+    }
+  }, [isPanelAdmin, panelId]);
 
   const handleToggleAnswered = async (q: Question) => {
     try {
@@ -528,6 +556,7 @@ export default function UserPanelQuestions() {
     );
   };
 
+  // Early returns doivent être après tous les hooks
   if (isLoading) return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6">
       <div className="flex flex-col items-center justify-center py-12">
@@ -552,15 +581,6 @@ export default function UserPanelQuestions() {
       </Card>
     </div>
   );
-
-  useEffect(() => {
-    if (panelId) {
-      console.log('Rendering UserPanelQuestions - isPanelAdmin:', isPanelAdmin, 'panelId:', panelId);
-      if (isPanelAdmin) {
-        console.log('Admin view - Rendering PollCreator');
-      }
-    }
-  }, [isPanelAdmin, panelId]);
 
   if (!panelId) return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6">
@@ -687,6 +707,7 @@ export default function UserPanelQuestions() {
         />
       </motion.div>
 
+      {/* Section admin - conditionnelle mais hooks déjà appelés */}
       {isPanelAdmin && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Card className="mt-4">
