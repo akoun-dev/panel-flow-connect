@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import type { Session } from '@/types/session';
 
 export interface PanelistSession {
   id: string;
@@ -59,6 +60,17 @@ const SessionService = {
           item.panels.users.email
         : '',
     }));
+  },
+
+  async getRecordedSessions(email: string): Promise<Session[]> {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('panelist_email', email);
+
+    if (error) throw error;
+
+    return (data as Session[]) || [];
   },
 };
 
