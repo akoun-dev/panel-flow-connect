@@ -5,6 +5,8 @@ import { useParams } from 'react-router-dom';
 import { supabase } from "@/lib/supabase";
 import { logger } from "@/lib/logger";
 import { useUser } from "@/hooks/useUser";
+import SessionService from "@/services/SessionService";
+import type { Session } from "@/types/session";
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,25 +87,6 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 
-interface Session {
-  id: string;
-  title: string;
-  description?: string;
-  panel_id: string;
-  panelist_id: string;
-  panelist_name: string;
-  panelist_email: string;
-  created_at: string;
-  updated_at: string;
-  duration: number; // en secondes
-  status: 'draft' | 'recording' | 'completed' | 'transcribing';
-  audio_url?: string;
-  transcript?: string;
-  transcript_confidence?: number;
-  tags?: string[];
-  is_public: boolean;
-  recording_quality: 'high' | 'medium' | 'low';
-}
 
 interface RecordingState {
   isRecording: boolean;
@@ -649,55 +632,14 @@ export default function PanelistSessions() {
   const [sortBy, setSortBy] = useState<'recent' | 'oldest' | 'duration'>('recent');
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
 
-  // Simulation de données de sessions
-  const { data: sessions = [], isLoading, refetch } = useQuery<Session[]>({
-    queryKey: ['panelist-sessions', panelId],
-    queryFn: async () => {
-      // Dans un vrai projet, ceci ferait appel à votre API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return [
-        {
-          id: '1',
-          title: 'Session sur la digitalisation',
-          description: 'Discussion sur les enjeux de la transformation digitale',
-          panel_id: panelId || '',
-          panelist_id: user?.id || '',
-          panelist_name: user?.name || 'Utilisateur',
-          panelist_email: user?.email || '',
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString(),
-          duration: 1245,
-          status: 'completed' as const,
-          transcript: 'Bonjour et merci de me donner la parole. Je souhaite aborder aujourd\'hui la question importante de la digitalisation...',
-          transcript_confidence: 94,
-          tags: ['digitalisation', 'transformation', 'processus'],
-          is_public: true,
-          recording_quality: 'high' as const
-        },
-        {
-          id: '2',
-          title: 'Retour d\'expérience client',
-          description: 'Témoignage sur l\'amélioration de l\'expérience utilisateur',
-          panel_id: panelId || '',
-          panelist_id: user?.id || '',
-          panelist_name: user?.name || 'Utilisateur',
-          panelist_email: user?.email || '',
-          created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          duration: 892,
-          status: 'completed' as const,
-          transcript: 'Dans notre démarche d\'amélioration continue, nous avons mis en place plusieurs initiatives...',
-          transcript_confidence: 89,
-          tags: ['expérience', 'client', 'amélioration'],
-          is_public: false,
-          recording_quality: 'medium' as const
-        }
-      ];
-    },
-    enabled: !!panelId,
+  const { data: sessions = [], isLoading, isError, refetch } = useQuery<Session[]>({
+    queryKey: ['panelist-sessions', panelId, user?.email],
+    queryFn: () => SessionService.getByPanelAndUser(panelId as string, user?.email || ''),
+    enabled: !!panelId && !!user?.email,
     refetchOnWindowFocus: false
   });
+
+  const panelistSession = sessions[0];
 
   // Gérer la fin d'enregistrement
   const handleRecordingComplete = (blob: Blob, duration: number) => {
@@ -940,6 +882,15 @@ export default function PanelistSessions() {
         </Dialog>
       </div>
 
+      {panelistSession && (
+        <Card>
+          <CardContent className="text-center p-4">
+            <h2 className="text-xl font-semibold mb-1">{panelistSession.title}</h2>
+            <p className="text-gray-600">Durée prévue : {formatDuration(panelistSession.duration)}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -1052,6 +1003,11 @@ export default function PanelistSessions() {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
+        ) : isError ? (
+          <Alert variant="destructive" className="justify-center">
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>Impossible de charger les sessions.</AlertDescription>
+          </Alert>
         ) : sortedSessions.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
