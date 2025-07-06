@@ -278,6 +278,81 @@ export type Database = {
           },
         ]
       }
+      sessions: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          panel_id: string | null
+          panelist_id: string | null
+          panelist_name: string
+          panelist_email: string
+          created_at: string | null
+          updated_at: string | null
+          duration: number | null
+          status: string | null
+          audio_url: string | null
+          transcript: string | null
+          transcript_confidence: number | null
+          tags: string[] | null
+          is_public: boolean | null
+          recording_quality: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          panel_id?: string | null
+          panelist_id?: string | null
+          panelist_name: string
+          panelist_email: string
+          created_at?: string | null
+          updated_at?: string | null
+          duration?: number | null
+          status?: string | null
+          audio_url?: string | null
+          transcript?: string | null
+          transcript_confidence?: number | null
+          tags?: string[] | null
+          is_public?: boolean | null
+          recording_quality?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          panel_id?: string | null
+          panelist_id?: string | null
+          panelist_name?: string
+          panelist_email?: string
+          created_at?: string | null
+          updated_at?: string | null
+          duration?: number | null
+          status?: string | null
+          audio_url?: string | null
+          transcript?: string | null
+          transcript_confidence?: number | null
+          tags?: string[] | null
+          is_public?: boolean | null
+          recording_quality?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_panel_id_fkey"
+            columns: ["panel_id"]
+            isOneToOne: false
+            referencedRelation: "panels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_panelist_id_fkey"
+            columns: ["panelist_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string | null
