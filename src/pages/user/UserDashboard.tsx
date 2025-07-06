@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 import { PanelService } from "@/services/panelService"
 import { logger } from "@/lib/logger"
 import { useUser } from "@/hooks/useUser"
@@ -160,6 +161,7 @@ const statusConfig = {
 
 export function UserDashboard() {
     const { user } = useUser()
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -934,7 +936,7 @@ export function UserDashboard() {
                                 {panel.userRole === "panéliste" ? (
                                     <DropdownMenuItem
                                         onClick={() => {
-                                            window.location.href = `/panel-questions?panel=${panel.id}`
+                                            navigate(`/panel-questions?panel=${panel.id}`)
                                         }}
                                     >
                                         <MessageSquare className="h-4 w-4 mr-2" />
@@ -969,7 +971,7 @@ export function UserDashboard() {
                                         </DropdownMenuLabel>
                                         <DropdownMenuItem
                                             onClick={() => {
-                                                window.location.href = `/panel-questions?panel=${panel.id}`
+                                                navigate(`/panel-questions?panel=${panel.id}`)
                                             }}
                                         >
                                             <MessageSquare className="h-4 w-4 mr-2" />
@@ -977,7 +979,7 @@ export function UserDashboard() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => {
-                                                window.location.href = `/panel/${panel.id}/polls`
+                                                navigate(`/panel/${panel.id}/polls`)
                                             }}
                                         >
                                             <BarChart3 className="h-4 w-4 mr-2" />
@@ -985,7 +987,7 @@ export function UserDashboard() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => {
-                                                window.location.href = `/panel/${panel.id}/projection`
+                                                navigate(`/panel/${panel.id}/projection`)
                                             }}
                                         >
                                             <Play className="h-4 w-4 mr-2" />
@@ -1074,7 +1076,7 @@ export function UserDashboard() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                                window.location.href = `/panel-questions?panel=${panel.id}`
+                                navigate(`/panel-questions?panel=${panel.id}`)
                             }}
                             className={
                                 panel.userRole === "panéliste" ? "flex-1" : ""
@@ -1182,9 +1184,9 @@ export function UserDashboard() {
                                     <Button
                                         size="sm"
                                         onClick={() => {
-                                            window.location.href = `/panel-questions?panel=${
-                                                userData.nextPanel!.id
-                                            }`
+                                            navigate(
+                                                `/panel-questions?panel=${userData.nextPanel!.id}`
+                                            )
                                         }}
                                     >
                                         <MessageSquare className="h-4 w-4 mr-2" />
@@ -1195,9 +1197,9 @@ export function UserDashboard() {
                                     <Button
                                         size="sm"
                                         onClick={() => {
-                                            window.location.href = `/panel/${
-                                                userData.nextPanel!.id
-                                            }/session`
+                                            navigate(
+                                                `/panel/${userData.nextPanel!.id}/session`
+                                            )
                                         }}
                                     >
                                         <Play className="h-4 w-4 mr-2" />
@@ -1257,10 +1259,9 @@ export function UserDashboard() {
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => {
-                                                        window.location.href = `/panel/${
-                                                            userData.nextPanel!
-                                                                .id
-                                                        }/projection`
+                                                        navigate(
+                                                            `/panel/${userData.nextPanel!.id}/projection`
+                                                        )
                                                     }}
                                                 >
                                                     <Play className="h-4 w-4 mr-2" />
@@ -1270,10 +1271,9 @@ export function UserDashboard() {
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => {
-                                                        window.location.href = `/panel/${
-                                                            userData.nextPanel!
-                                                                .id
-                                                        }/polls`
+                                                        navigate(
+                                                            `/panel/${userData.nextPanel!.id}/polls`
+                                                        )
                                                     }}
                                                 >
                                                     <BarChart3 className="h-4 w-4 mr-2" />
@@ -1752,9 +1752,9 @@ export function UserDashboard() {
                                         variant="outline"
                                         size="sm"
                                         onClick={() => {
-                                            window.location.href = `/panel-questions?panel=${
-                                                managePanelModal.panel!.id
-                                            }`
+                                            navigate(
+                                                `/panel-questions?panel=${managePanelModal.panel!.id}`
+                                            )
                                         }}
                                         className="flex items-center gap-2"
                                     >
@@ -1765,9 +1765,9 @@ export function UserDashboard() {
                                         variant="outline"
                                         size="sm"
                                         onClick={() => {
-                                            window.location.href = `/panel/${
-                                                managePanelModal.panel!.id
-                                            }/projection`
+                                            navigate(
+                                                `/panel/${managePanelModal.panel!.id}/projection`
+                                            )
                                         }}
                                         className="flex items-center gap-2"
                                     >
@@ -1778,9 +1778,9 @@ export function UserDashboard() {
                                         variant="outline"
                                         size="sm"
                                         onClick={() => {
-                                            window.location.href = `/panel/${
-                                                managePanelModal.panel!.id
-                                            }/polls`
+                                            navigate(
+                                                `/panel/${managePanelModal.panel!.id}/polls`
+                                            )
                                         }}
                                         className="flex items-center gap-2"
                                     >
