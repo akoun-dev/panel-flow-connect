@@ -115,6 +115,7 @@ const App = () => {
               <Route path="planning" element={<UserPlanning />} />
               <Route path="profile" element={<UserProfile />} />
               <Route path="invitations" element={<UserInvitation />} />
+              <Route path="sessions" element={<UserSessions />} />
               <Route path="panel-questions" element={<UserPanelQuestions />} />
               <Route path="/panel/:panelId/session" element={<PanelistSession />}/>
               <Route path="/panel/:panelId/polls" element={<PanelPollsPage />} />
