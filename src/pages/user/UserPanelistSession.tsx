@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { useUser } from "@/hooks/useUser";
 import SessionService from "@/services/SessionService";
 import type { Session } from "@/types/session";
+import { useToast } from "@/components/ui/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -610,6 +611,7 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
 export default function PanelistSessions() {
   const { panelId } = useParams<{ panelId: string }>();
   const { user } = useUser();
+  const { toast } = useToast();
   
   // États pour la session en cours
   const [currentSession, setCurrentSession] = useState<Partial<Session>>({
@@ -664,15 +666,35 @@ export default function PanelistSessions() {
 
   // Sauvegarder la session
   const saveSession = async () => {
-    if (!currentSession.title || !recordedAudio.blob) return;
+    if (!currentSession.title || !recordedAudio.blob || !panelId || !user) return;
 
     try {
-      // Dans un vrai projet, vous uploaderiez l'audio et sauvegarderiez en base
-      console.log('Sauvegarde de la session:', currentSession);
-      
-      // Simuler la sauvegarde
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      const fileName = `${crypto.randomUUID()}.webm`;
+      const { error: uploadErr } = await supabase.storage
+        .from('recordings')
+        .upload(fileName, recordedAudio.blob, { contentType: 'audio/webm' });
+
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage
+        .from('recordings')
+        .getPublicUrl(fileName);
+
+      await SessionService.insert({
+        ...(currentSession as Omit<Session, 'id' | 'created_at' | 'updated_at'>),
+        panel_id: panelId,
+        panelist_id: user.id,
+        panelist_name: user.user_metadata?.name ?? '',
+        panelist_email: user.email ?? '',
+        duration: recordedAudio.duration ?? 0,
+        audio_url: urlData.publicUrl
+      });
+
+      toast({
+        title: 'Session sauvegardée',
+        description: 'Votre session a été enregistrée avec succès'
+      });
+
       // Reset
       setCurrentSession({
         title: '',
@@ -685,9 +707,14 @@ export default function PanelistSessions() {
       setRecordedAudio({});
       setShowNewSessionDialog(false);
       refetch();
-      
+
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de sauvegarder la session',
+        variant: 'destructive'
+      });
     }
   };
 
