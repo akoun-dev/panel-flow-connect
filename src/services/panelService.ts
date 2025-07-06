@@ -56,6 +56,19 @@ export const PanelService = {
     return data as Panel[];
   },
 
+  async hasOwnPanel(userId: string, userEmail?: string) {
+    let query = supabase
+      .from('panels')
+      .select('id')
+      .or(`user_id.eq.${userId}${userEmail ? ",moderator_email.eq." + userEmail : ''}`)
+      .limit(1)
+      .maybeSingle();
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return !!data;
+  },
+
   async updatePanel(id: string, updates: Partial<Omit<Panel, 'qr_code_url'>>) {
     // Vérifier d'abord si le panel existe
     const { data: existingPanel, error: fetchError } = await supabase

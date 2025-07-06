@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { PanelService } from "@/services/panelService";
+import { useUser } from "@/hooks/useUser";
 import { 
   LayoutDashboard,
   Mic,
@@ -62,6 +64,8 @@ function CurrentTime() {
 export function UserLayout({ children }: UserLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [hasOwnPanel, setHasOwnPanel] = useState(false);
+  const { user } = useUser();
   const location = useLocation();
 
   useEffect(() => {
@@ -69,6 +73,13 @@ export function UserLayout({ children }: UserLayoutProps) {
       setUserEmail(data.user?.email || null);
     });
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    PanelService.hasOwnPanel(user.id, user.email).then(setHasOwnPanel).catch(() => setHasOwnPanel(false));
+  }, [user]);
+
+  const menuItems = hasOwnPanel ? panelistMenuItems : panelistMenuItems.filter(item => item.url !== '/panels');
 
   return (
       <div className="min-h-screen bg-gradient-to-br from-[#84c282]/20 to-[#5cbcb4]/30 dark:from-[#347080] dark:to-[#045ca4]">
@@ -148,7 +159,7 @@ export function UserLayout({ children }: UserLayoutProps) {
                   )}
               >
                   <nav className="mt-8 px-4 space-y-2">
-                      {panelistMenuItems.map(item => {
+                      {menuItems.map(item => {
                           const isActive = location.pathname === item.url
                           return (
                               <NavLink
