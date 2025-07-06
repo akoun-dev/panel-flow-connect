@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useUser } from '@/hooks/useUser';
+import { PanelService } from '@/services/panelService';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,7 +60,7 @@ import { useToast } from '@/components/ui/use-toast';
 import PollsQRCode from '@/components/polls/PollsQRCode';
 import { PollCreator } from '@/components/polls/PollCreator';
 import { PollEditor } from '@/components/polls/PollEditor';
-import type { Poll } from '@/types/poll';
+import type { Poll, Panel } from '@/types';
 
 interface PollOption {
   id: string;
@@ -103,6 +105,18 @@ export default function PanelPollsPage() {
   const [expandedPoll, setExpandedPoll] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingPoll, setEditingPoll] = useState<ExtendedPoll | null>(null);
+  const [panel, setPanel] = useState<Panel | null>(null);
+  const { user } = useUser();
+  const canManagePolls = useMemo(
+    () =>
+      !!(
+        panel &&
+        user &&
+        (panel.user_id === user.id ||
+          panel.moderator_email?.toLowerCase() === user.email?.toLowerCase())
+      ),
+    [panel, user]
+  );
 
   // Mémoisation des sondages filtrés et triés
   const filteredAndSortedPolls = useMemo(() => {
@@ -229,6 +243,13 @@ export default function PanelPollsPage() {
       setRefreshing(false);
     }
   }, [panelId, toast]);
+
+  useEffect(() => {
+    if (!panelId) return;
+    PanelService.getPanelById(panelId)
+      .then(setPanel)
+      .catch(() => setPanel(null));
+  }, [panelId]);
 
   useEffect(() => {
     if (panelId) {
@@ -480,24 +501,28 @@ export default function PanelPollsPage() {
 
   return (
     <>
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Créer un sondage</DialogTitle>
-          </DialogHeader>
-          <PollCreator panelId={panelId} onCreated={handlePollCreated} />
-        </DialogContent>
-      </Dialog>
-      <Dialog open={!!editingPoll} onOpenChange={(o) => { if (!o) setEditingPoll(null); }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Modifier le sondage</DialogTitle>
-          </DialogHeader>
-          {editingPoll && (
-            <PollEditor poll={editingPoll} onSaved={() => { setEditingPoll(null); fetchPolls(); }} />
-          )}
-        </DialogContent>
-      </Dialog>
+      {canManagePolls && (
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Créer un sondage</DialogTitle>
+            </DialogHeader>
+            <PollCreator panelId={panelId} onCreated={handlePollCreated} />
+          </DialogContent>
+        </Dialog>
+      )}
+      {canManagePolls && (
+        <Dialog open={!!editingPoll} onOpenChange={(o) => { if (!o) setEditingPoll(null); }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Modifier le sondage</DialogTitle>
+            </DialogHeader>
+            {editingPoll && (
+              <PollEditor poll={editingPoll} onSaved={() => { setEditingPoll(null); fetchPolls(); }} />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
       <div className="p-4 space-y-6 max-w-7xl mx-auto">
       {/* En-tête avec statistiques globales */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -538,6 +563,12 @@ export default function PanelPollsPage() {
       <div className="flex justify-center">
         <PollsQRCode panelId={panelId} url={window.location.origin} />
       </div>
+
+      {!canManagePolls && (
+        <p className="text-center text-sm text-gray-500">
+          Vous ne pouvez pas gérer les sondages de ce panel.
+        </p>
+      )}
 
       {/* Barre d'outils */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
@@ -628,7 +659,7 @@ export default function PanelPollsPage() {
             Actualiser
           </Button>
           
-          {selectedPolls.size > 0 && (
+          {canManagePolls && selectedPolls.size > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -656,10 +687,12 @@ export default function PanelPollsPage() {
             </DropdownMenu>
           )}
           
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau sondage
-          </Button>
+          {canManagePolls && (
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau sondage
+            </Button>
+          )}
         </div>
       </div>
 
@@ -690,10 +723,12 @@ export default function PanelPollsPage() {
                     Réinitialiser les filtres
                   </Button>
                 )}
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer un sondage
-                </Button>
+                {canManagePolls && (
+                  <Button onClick={() => setCreateDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer un sondage
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -740,12 +775,14 @@ export default function PanelPollsPage() {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedPolls.has(poll.id)}
-                      onChange={() => togglePollSelection(poll.id)}
-                      className="rounded border-gray-300"
-                    />
+                    {canManagePolls && (
+                      <input
+                        type="checkbox"
+                        checked={selectedPolls.has(poll.id)}
+                        onChange={() => togglePollSelection(poll.id)}
+                        className="rounded border-gray-300"
+                      />
+                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
@@ -765,15 +802,19 @@ export default function PanelPollsPage() {
                           <Download className="h-4 w-4 mr-2" />
                           Exporter les résultats
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Settings className="h-4 w-4 mr-2" />
-                          Paramètres
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Supprimer
-                        </DropdownMenuItem>
+                        {canManagePolls && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Settings className="h-4 w-4 mr-2" />
+                              Paramètres
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -868,10 +909,12 @@ export default function PanelPollsPage() {
                       <Download className="h-4 w-4 mr-2" />
                       Exporter
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setEditingPoll(poll)}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Modifier
-                    </Button>
+                    {canManagePolls && (
+                      <Button variant="outline" size="sm" onClick={() => setEditingPoll(poll)}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Modifier
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
