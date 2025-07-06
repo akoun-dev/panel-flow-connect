@@ -1,3 +1,5 @@
+-- Recreate sessions table if it already exists so the migration can be rerun
+DROP TABLE IF EXISTS public.sessions CASCADE;
 -- Create sessions table with full schema
 CREATE TABLE public.sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

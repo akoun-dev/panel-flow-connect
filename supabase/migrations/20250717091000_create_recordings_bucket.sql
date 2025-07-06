@@ -2,9 +2,10 @@
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM storage.buckets WHERE name = 'recordings'
+    SELECT 1 FROM storage.buckets WHERE id = 'recordings'
   ) THEN
-    PERFORM storage.create_bucket('recordings', public := false);
+    INSERT INTO storage.buckets (id, name, public)
+    VALUES ('recordings', 'recordings', false);
   END IF;
 END;
 $$;
