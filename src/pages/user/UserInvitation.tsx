@@ -3,6 +3,7 @@ import { Mail, Clock, Check, X, Calendar, User, Eye, MapPin, Users } from "lucid
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { logger } from "@/lib/logger";
+import PanelInvitationService from "@/services/PanelInvitationService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
@@ -123,12 +124,8 @@ export function UserInvitation() {
 
   const handleAccept = useMutation({
     mutationFn: async (invitationId: string) => {
-      const { error } = await supabase
-        .from('panel_invitations')
-        .update({ status: 'accepted' })
-        .eq('id', invitationId);
-      
-      if (error) throw error;
+      if (!user?.id) throw new Error('Utilisateur non authentifié');
+      await PanelInvitationService.acceptInvitation(invitationId, user.id);
     },
     onSuccess: () => {
       refetch();
