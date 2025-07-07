@@ -94,15 +94,14 @@ export function UserLayout({ children }: UserLayoutProps) {
                           </Button>
 
                           <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-[#046eb6] to-[#5cbcb4] rounded-xl flex items-center justify-center">
-                                  <Mic className="h-5 w-5 text-white" />
-                              </div>
-                              <div>
-                                  <h1 className="text-lg sm:text-xl font-bold text-[#0c54a4] dark:text-[#5cbcb4]">
-                                      PANELFLOW
-                                  </h1>
+                              <div className="flex flex-col items-center">
+                                  <img
+                                    src="/images/ivoiretech.png"
+                                    alt="IvoireTech Logo"
+                                    className="h-4 sm:h-6 mb-1"
+                                  />
                                   <p className="text-xs sm:text-sm text-[#45b9bc] dark:text-[#84c282]">
-                                      Mon espace
+                                      MON ESPACE
                                   </p>
                               </div>
                           </div>
