@@ -520,7 +520,7 @@ export function UserInvitation() {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => window.location.href = '/schedule'}
+                              onClick={() => window.location.href = '/planning'}
                             >
                               Voir dans le planning
                             </Button>
