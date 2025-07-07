@@ -101,12 +101,12 @@ interface RecordingState {
 
 // Conversion WebM/PCM vers MP3 à l'aide de lamejs
 const convertToMp3 = async (inputBlob: Blob): Promise<Blob> => {
-  const { Mp3Encoder } = await import('lamejs');
+  const { default: lamejs } = await import('lamejs');
   const arrayBuffer = await inputBlob.arrayBuffer();
   const ctx = new AudioContext();
   const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
   const samples = audioBuffer.getChannelData(0);
-  const mp3encoder = new Mp3Encoder(1, audioBuffer.sampleRate, 128);
+  const mp3encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
   const sampleBlockSize = 1152;
   const mp3Data: Uint8Array[] = [];
   const converted = new Int16Array(samples.length);
