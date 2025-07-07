@@ -506,8 +506,8 @@ export function UserPanels() {
         toast.success("Panel créé avec succès!");
       }
       
-      setIsModalOpen(false);
       resetForm();
+      setIsModalOpen(false);
       
     } catch (error) {
       console.error("Error saving panel:", error);

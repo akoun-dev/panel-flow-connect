@@ -18,7 +18,7 @@ export default function PollsQRCode({ panelId, size = 128, url }: PollsQRCodePro
   const { toast } = useToast();
   const qrRef = useRef<HTMLDivElement>(null);
 
-  const qrValue = `${url ?? window.location.origin}/panel/${panelId}/polls`;
+  const qrValue = `${url ?? window.location.origin}/panel/${panelId}/questions`;
 
   const handleDownload = () => {
     if (!qrRef.current) return;
