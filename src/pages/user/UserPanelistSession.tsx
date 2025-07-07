@@ -98,6 +98,34 @@ interface RecordingState {
   audioUrl?: string;
 }
 
+// Conversion WebM/PCM vers MP3 à l'aide de lamejs
+const convertToMp3 = async (inputBlob: Blob): Promise<Blob> => {
+  const { Mp3Encoder } = await import('lamejs');
+  const arrayBuffer = await inputBlob.arrayBuffer();
+  const ctx = new AudioContext();
+  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+  const samples = audioBuffer.getChannelData(0);
+  const mp3encoder = new Mp3Encoder(1, audioBuffer.sampleRate, 128);
+  const sampleBlockSize = 1152;
+  const mp3Data: Uint8Array[] = [];
+  const converted = new Int16Array(samples.length);
+
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    converted[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+
+  for (let i = 0; i < converted.length; i += sampleBlockSize) {
+    const chunk = converted.subarray(i, i + sampleBlockSize);
+    const mp3buf = mp3encoder.encodeBuffer(chunk);
+    if (mp3buf.length > 0) mp3Data.push(mp3buf);
+  }
+  const endBuf = mp3encoder.flush();
+  if (endBuf.length > 0) mp3Data.push(endBuf);
+  ctx.close();
+  return new Blob(mp3Data, { type: 'audio/mpeg' });
+};
+
 // Composant pour l'enregistrement audio
 const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop }: {
   onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -140,10 +168,12 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
       source.connect(analyserRef.current);
       analyserRef.current.fftSize = 256;
 
-      // Configuration du MediaRecorder
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      // Configuration du MediaRecorder en privilégiant l'export MP3
+      let mimeType = 'audio/mpeg';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm;codecs=opus';
+      }
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       const chunks: Blob[] = [];
       
@@ -153,10 +183,13 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
         }
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
+      mediaRecorder.onstop = async () => {
+        let blob = new Blob(chunks, { type: mediaRecorder.mimeType });
+        if (mediaRecorder.mimeType !== 'audio/mpeg') {
+          blob = await convertToMp3(blob);
+        }
         const audioUrl = URL.createObjectURL(blob);
-        
+
         setRecordingState(prev => ({
           ...prev,
           audioBlob: blob,
@@ -669,10 +702,10 @@ export default function PanelistSessions() {
     if (!currentSession.title || !recordedAudio.blob || !panelId || !user) return;
 
     try {
-      const fileName = `${crypto.randomUUID()}.webm`;
+      const fileName = `${crypto.randomUUID()}.mp3`;
       const { error: uploadErr } = await supabase.storage
         .from('recordings')
-        .upload(fileName, recordedAudio.blob, { contentType: 'audio/webm' });
+        .upload(fileName, recordedAudio.blob, { contentType: 'audio/mpeg' });
 
       if (uploadErr) throw uploadErr;
 
