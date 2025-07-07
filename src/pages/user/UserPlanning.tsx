@@ -503,7 +503,7 @@ export default function UserPlanning() {
                 {!sidebarCollapsed && (
                     <div className="p-4 space-y-6 overflow-y-auto h-full">
                         {/* Statistiques rapides */}
-                        <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <StatCard
                                 title="Cette semaine"
                                 value={stats.thisWeek}
