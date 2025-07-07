@@ -534,7 +534,7 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Transcription
+            Speech to text
           </CardTitle>
           
           {isTranscribing && (
@@ -549,13 +549,13 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
         {!audioBlob ? (
           <div className="text-center py-8">
             <FileAudio className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600">Enregistrez d'abord un audio pour obtenir la transcription</p>
+            <p className="text-gray-600">Enregistrez d'abord un audio pour obtenir le texte (speech to text)</p>
           </div>
         ) : isTranscribing ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-              <span className="text-sm text-gray-600">Transcription en cours...</span>
+              <span className="text-sm text-gray-600">Speech to text en cours...</span>
               <Badge variant="outline" className="bg-blue-50 text-blue-700">
                 {confidence}% confiance
               </Badge>
@@ -573,7 +573,7 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-green-700 font-medium">Transcription terminée</span>
+                <span className="text-sm text-green-700 font-medium">Speech to text terminé</span>
                 <Badge variant="outline" className="bg-green-50 text-green-700">
                   {confidence}% confiance
                 </Badge>
@@ -602,7 +602,7 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
                 value={transcript}
                 onChange={(e) => setTranscript(e.target.value)}
                 className="min-h-[120px] text-gray-800"
-                placeholder="Modifiez la transcription..."
+                placeholder="Modifiez le texte (speech to text)..."
               />
             ) : (
               <div className="bg-gray-50 rounded-lg p-4">
@@ -816,7 +816,7 @@ export default function PanelistSessions() {
             <DialogHeader>
               <DialogTitle>Créer une nouvelle session</DialogTitle>
               <DialogDescription>
-                Enregistrez votre prise de parole et obtenez une transcription automatique
+                Enregistrez votre prise de parole et obtenez un texte automatique (speech to text)
               </DialogDescription>
             </DialogHeader>
             
@@ -1019,7 +1019,7 @@ export default function PanelistSessions() {
                   <SelectItem value="draft">Brouillon</SelectItem>
                   <SelectItem value="recording">Enregistrement</SelectItem>
                   <SelectItem value="completed">Terminé</SelectItem>
-                  <SelectItem value="transcribing">Transcription</SelectItem>
+                  <SelectItem value="transcribing">Speech to text</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -1144,7 +1144,7 @@ export default function PanelistSessions() {
                         {session.transcript && (
                           <div className="bg-gray-50 rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">Transcription</span>
+                              <span className="text-sm font-medium text-gray-700">Speech to text</span>
                               <Badge variant="outline" className="text-xs">
                                 {session.transcript_confidence}% confiance
                               </Badge>

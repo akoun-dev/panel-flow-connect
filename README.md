@@ -139,9 +139,9 @@ L'organisateur peut inviter des participants en saisissant leurs adresses e‑ma
 - Les sessions audio sont désormais converties en MP3 avant l'envoi vers Supabase.
 - Les lecteurs intégrés utilisent directement ces fichiers `.mp3`.
 
-## Transcriptions
+## Speech to text
 
-Pour générer automatiquement la transcription des audios, renseignez la variable
+Pour générer automatiquement la transcription (Speech to text) des audios, renseignez la variable
 `VITE_OPENAI_API_KEY` dans votre fichier `.env`.
 
 ```bash

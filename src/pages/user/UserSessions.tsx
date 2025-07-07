@@ -323,7 +323,7 @@ export function UserSessions() {
                     )}
                   </div>
                   <Badge className={session.status === 'completed' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-blue-100 text-blue-700 border-blue-300'}>
-                    {session.status === 'completed' ? 'Terminé' : session.status === 'transcribing' ? 'Transcription' : 'Brouillon'}
+                    {session.status === 'completed' ? 'Terminé' : session.status === 'transcribing' ? 'Speech to text' : 'Brouillon'}
                   </Badge>
                 </div>
               </CardHeader>
