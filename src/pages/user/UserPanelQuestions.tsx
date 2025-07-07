@@ -69,6 +69,7 @@ interface Question {
   created_at: string;
   is_anonymous?: boolean;
   panelist_email?: string | null;
+  panelist_name?: string | null;
   author_name?: string | null;
   responses: Array<{content: string; created_at?: string}>;
   is_answered: boolean;
@@ -283,8 +284,10 @@ export default function UserPanelQuestions() {
   const QuestionCard = ({ question, index }: { question: Question; index: number }) => {
     const isRecent = new Date(Date.now() - 30 * 60 * 1000) < new Date(question.created_at); // 30 min
     const hasResponse = question.responses && question.responses.length > 0;
-    const responseTime = hasResponse && question.responses[0].created_at ? 
+    const responseTime = hasResponse && question.responses[0].created_at ?
       new Date(question.responses[0].created_at).getTime() - new Date(question.created_at).getTime() : null;
+    const isTargeted = user?.email === question.panelist_email && !question.is_answered;
+    const panelistName = question.panelist_name || panelists.find(p => p.email === question.panelist_email)?.name;
 
     if (viewMode === 'compact') {
       return (
@@ -292,7 +295,7 @@ export default function UserPanelQuestions() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
-          className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
+          className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group ${isTargeted ? 'ring-2 ring-blue-500 animate-pulse' : ''}`}
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -330,7 +333,7 @@ export default function UserPanelQuestions() {
         transition={{ duration: 0.3, delay: index * 0.1 }}
         className={`group ${
           isRecent ? 'ring-2 ring-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50' : ''
-        }`}
+        } ${isTargeted ? 'ring-2 ring-blue-500 animate-pulse' : ''}`}
       >
         <Card className="hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
           <CardContent className="p-4 sm:p-6">
@@ -464,6 +467,9 @@ export default function UserPanelQuestions() {
                   <p className="text-gray-800 text-sm sm:text-base leading-relaxed break-words">
                     {question.content}
                   </p>
+                  {panelistName && (
+                    <p className="text-xs text-gray-500 mt-1">Pour {panelistName}</p>
+                  )}
                   {!question.is_anonymous && question.author_name && (
                     <p className="text-xs text-gray-500 mt-1">par {question.author_name}</p>
                   )}

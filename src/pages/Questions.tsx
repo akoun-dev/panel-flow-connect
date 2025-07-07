@@ -51,6 +51,7 @@ interface Question {
   content: string;
   panel_id: string;
   panelist_email?: string | null;
+  panelist_name?: string | null;
   // author_name?: string | null;
   is_anonymous: boolean;
   is_answered: boolean;
@@ -245,6 +246,10 @@ export default function Questions({ panel }: { panel?: Panel }) {
         length: newQuestion.length
       });
 
+      const panelistName =
+        panel?.panelists &&
+        (panel.panelists as Panelist[]).find(p => p.email === selectedPanelistEmail)?.name || null;
+
       const { data, error } = await supabase
         .from('questions')
         .insert({
@@ -253,6 +258,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
           is_anonymous: isAnonymous,
           is_answered: false,
           panelist_email: selectedPanelistEmail || null,
+          panelist_name: panelistName,
           // author_name: isAnonymous ? null : authorName.trim()
         })
         .select()
@@ -387,6 +393,8 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
   const QuestionCard = ({ question, index }: { question: Question; index: number }) => {
     const isRecent = new Date(Date.now() - 10 * 60 * 1000) < new Date(question.created_at);
+    const panelistName = question.panelist_name ||
+      panel?.panelists && (panel.panelists as Panelist[]).find(p => p.email === question.panelist_email)?.name;
 
     return (
       <Card 
@@ -543,6 +551,10 @@ export default function Questions({ panel }: { panel?: Panel }) {
               <p className="text-gray-800 text-sm sm:text-base leading-relaxed mb-3 break-words">
                 {question.content}
               </p>
+
+              {panelistName && (
+                <p className="text-xs text-gray-500 mb-2">Pour {panelistName}</p>
+              )}
 
               {/* {!question.is_anonymous && question.author_name && (
                 <p className="text-xs text-gray-500 mb-2">Par {question.author_name}</p>
