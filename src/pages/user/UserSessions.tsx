@@ -199,7 +199,7 @@ export function UserSessions() {
               {/* Statistiques temps réel */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-red-900">En direct</h3>
-                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="text-center p-3 bg-white rounded-lg">
                     <Users className="h-5 w-5 mx-auto text-red-600 mb-1" />
                     <div className="font-bold text-red-900">{session.participants}</div>

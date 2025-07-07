@@ -333,7 +333,7 @@ export function UserInvitation() {
                               )}
 
                               {/* Informations pratiques */}
-                              <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                   <h4 className="font-medium mb-1">📅 Date et heure</h4>
                                   <p className="text-sm">
@@ -383,7 +383,7 @@ export function UserInvitation() {
                               {/* Informations sur l'invitation */}
                               <div className="border-t pt-4">
                                 <h4 className="font-medium mb-2">Informations sur l'invitation</h4>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                   <div>
                                     <span className="font-medium">Invité le :</span>
                                     <p>{new Date(invitation.created_at).toLocaleDateString('fr-FR')}</p>

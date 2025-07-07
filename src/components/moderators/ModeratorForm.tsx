@@ -55,7 +55,7 @@ export function ModeratorForm({ moderator, onSubmit, onCancel }: ModeratorFormPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nom complet *</Label>
           <Input
@@ -80,7 +80,7 @@ export function ModeratorForm({ moderator, onSubmit, onCancel }: ModeratorFormPr
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="phone">Téléphone</Label>
           <Input
