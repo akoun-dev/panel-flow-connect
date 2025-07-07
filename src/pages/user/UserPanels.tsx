@@ -453,6 +453,26 @@ export function UserPanels() {
     }
   }, [user?.id]);
 
+  const handleCloseModal = useCallback(
+    (force = false) => {
+      if (!force && hasUnsavedChanges) {
+        const confirmClose = window.confirm(
+          "Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?"
+        );
+        if (!confirmClose) return;
+      }
+
+      setIsModalOpen(false);
+      resetForm();
+    },
+    [hasUnsavedChanges, resetForm]
+  );
+
+  const handleCloseModalClick = useCallback(
+    () => handleCloseModal(false),
+    [handleCloseModal]
+  );
+
   const handleSubmit = useCallback(async () => {
     if (!user?.id) {
       toast.error("Utilisateur non connecté");
@@ -515,21 +535,6 @@ export function UserPanels() {
       setIsSubmitting(false);
     }
   }, [user, userProfile, panelForm, editingPanelId, handleCloseModal]);
-
-  const handleCloseModal = useCallback(
-    (force = false) => {
-      if (!force && hasUnsavedChanges) {
-        const confirmClose = window.confirm(
-          "Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?"
-        );
-        if (!confirmClose) return;
-      }
-
-      setIsModalOpen(false);
-      resetForm();
-    },
-    [hasUnsavedChanges, resetForm]
-  );
 
   // Actions sur les panels
   const handleManagePanel = useCallback((panel: Panel) => {
@@ -1282,7 +1287,7 @@ export function UserPanels() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        window.location.href = `/panel/${managePanelModal.panel!.id}/polls`;
+                        window.location.href = `/panel/${managePanelModal.panel!.id}/questions`;
                       }}
                       className="flex items-center gap-2"
                     >
@@ -1671,7 +1676,7 @@ export function UserPanels() {
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-6 border-t">
                 <Button
                   variant="outline"
-                  onClick={handleCloseModal}
+                  onClick={() => handleCloseModal(false)}
                   disabled={isSubmitting}
                   className="w-full sm:w-auto"
                 >

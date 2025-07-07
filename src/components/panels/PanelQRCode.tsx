@@ -17,15 +17,8 @@ export function PanelQRCode({ panel, size = 128, url }: PanelQRCodeProps) {
   
   const qrValue = useMemo(() => {
     if (url) return url;
-
-    if (panel.qr_code_url) {
-      return panel.qr_code_url.startsWith('http')
-        ? panel.qr_code_url
-        : `${window.location.origin}${panel.qr_code_url}`;
-    }
-
-    return `${window.location.origin}/panel/${panel.id}/quesions`;
-  }, [panel.id, panel.qr_code_url, url]);
+    return `${window.location.origin}/panel/${panel.id}/questions`;
+  }, [panel.id, url]);
 
   const handleDownload = () => {
     if (!qrRef.current) return;
