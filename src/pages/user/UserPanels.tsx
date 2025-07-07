@@ -506,8 +506,7 @@ export function UserPanels() {
         toast.success("Panel créé avec succès!");
       }
       
-      setIsModalOpen(false);
-      resetForm();
+      handleCloseModal(true);
       
     } catch (error) {
       console.error("Error saving panel:", error);
@@ -515,17 +514,22 @@ export function UserPanels() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [user, userProfile, panelForm, editingPanelId, resetForm]);
+  }, [user, userProfile, panelForm, editingPanelId, handleCloseModal]);
 
-  const handleCloseModal = useCallback(() => {
-    if (hasUnsavedChanges) {
-      const confirmClose = window.confirm("Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?");
-      if (!confirmClose) return;
-    }
-    
-    setIsModalOpen(false);
-    resetForm();
-  }, [hasUnsavedChanges, resetForm]);
+  const handleCloseModal = useCallback(
+    (force = false) => {
+      if (!force && hasUnsavedChanges) {
+        const confirmClose = window.confirm(
+          "Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?"
+        );
+        if (!confirmClose) return;
+      }
+
+      setIsModalOpen(false);
+      resetForm();
+    },
+    [hasUnsavedChanges, resetForm]
+  );
 
   // Actions sur les panels
   const handleManagePanel = useCallback((panel: Panel) => {

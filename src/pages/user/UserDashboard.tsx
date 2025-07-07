@@ -729,17 +729,20 @@ export function UserDashboard() {
         [panelForm]
     )
 
-    const handleCloseModal = useCallback(() => {
-        if (hasUnsavedChanges) {
-            const confirmClose = window.confirm(
-                "Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?"
-            )
-            if (!confirmClose) return
-        }
+    const handleCloseModal = useCallback(
+        (force = false) => {
+            if (!force && hasUnsavedChanges) {
+                const confirmClose = window.confirm(
+                    "Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?"
+                )
+                if (!confirmClose) return
+            }
 
-        setIsModalOpen(false)
-        resetForm()
-    }, [hasUnsavedChanges, resetForm])
+            setIsModalOpen(false)
+            resetForm()
+        },
+        [hasUnsavedChanges, resetForm]
+    )
 
     const handleSubmit = useCallback(async () => {
         if (!user?.id) {
@@ -801,7 +804,7 @@ export function UserDashboard() {
                 toast.success("Panel créé avec succès!")
             }
 
-            handleCloseModal()
+            handleCloseModal(true)
             fetchData(true)
         } catch (error) {
             console.error("Error saving panel:", error)
