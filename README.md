@@ -135,6 +135,10 @@ L'organisateur peut inviter des participants en saisissant leurs adresses e‑ma
 - Optimisation de la hiérarchie des composants
 - Conservation de toutes les fonctionnalités principales
 
+### Enregistrements MP3 (07/07/2025)
+- Les sessions audio sont désormais converties en MP3 avant l'envoi vers Supabase.
+- Les lecteurs intégrés utilisent directement ces fichiers `.mp3`.
+
 ## Déploiement
 
 1. Exécutez `npm run build` pour générer l'application dans le dossier `dist/`.
