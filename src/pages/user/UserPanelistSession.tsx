@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { logger } from "@/lib/logger";
 import { useUser } from "@/hooks/useUser";
 import SessionService from "@/services/SessionService";
+import TranscriptionService from "@/services/TranscriptionService";
 import type { Session } from "@/types/session";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -499,43 +500,28 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
   const [transcript, setTranscript] = useState('');
   const [confidence, setConfidence] = useState(0);
   const [editMode, setEditMode] = useState(false);
+  const [error, setError] = useState('');
 
-  // Simulation de transcription (dans un vrai projet, vous utiliseriez une API comme OpenAI Whisper)
-  const simulateTranscription = async () => {
-    if (!audioBlob) return;
-
-    setIsTranscribing(true);
-    setTranscript('');
-    setConfidence(0);
-
-    // Simulation du processus de transcription
-    const words = [
-      "Bonjour", "et", "merci", "de", "me", "donner", "la", "parole.",
-      "Je", "souhaite", "aborder", "aujourd'hui", "la", "question", "importante",
-      "de", "la", "digitalisation", "de", "nos", "processus.", "Il", "est", "essentiel",
-      "que", "nous", "prenions", "en", "compte", "les", "besoins", "de", "tous",
-      "les", "utilisateurs", "dans", "cette", "démarche", "de", "transformation."
-    ];
-
-    let currentTranscript = '';
-    let wordIndex = 0;
-
-    const addWord = () => {
-      if (wordIndex < words.length) {
-        currentTranscript += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
-        setTranscript(currentTranscript);
-        setConfidence(Math.min(95, 70 + wordIndex * 2)); // Simulation de confiance croissante
-        wordIndex++;
-        setTimeout(addWord, 200 + Math.random() * 300);
-      } else {
+  useEffect(() => {
+    const run = async () => {
+      if (!audioBlob) return;
+      setIsTranscribing(true);
+      setTranscript('');
+      setError('');
+      try {
+        const text = await TranscriptionService.transcribeAudio(audioBlob);
+        setTranscript(text);
+        setConfidence(100);
+        onTranscriptionComplete(text, 100);
+      } catch (err: any) {
+        logger.error('transcription error', err);
+        setError('Erreur lors de la transcription');
+      } finally {
         setIsTranscribing(false);
-        onTranscriptionComplete(currentTranscript, 92);
       }
     };
-
-    // Délai initial
-    setTimeout(addWord, 1000);
-  };
+    run();
+  }, [audioBlob]);
 
   const saveTranscription = () => {
     onTranscriptionComplete(transcript, confidence);
@@ -551,11 +537,10 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
             Transcription
           </CardTitle>
           
-          {audioBlob && !isTranscribing && !transcript && (
-            <Button onClick={simulateTranscription} variant="outline" size="sm">
-              <Zap className="h-4 w-4 mr-2" />
-              Transcrire
-            </Button>
+          {isTranscribing && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              En cours
+            </Badge>
           )}
         </div>
       </CardHeader>
@@ -627,14 +612,12 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
               </div>
             )}
           </div>
-        ) : (
-          <div className="text-center py-4">
-            <Button onClick={simulateTranscription} className="bg-blue-600 hover:bg-blue-700">
-              <Zap className="h-4 w-4 mr-2" />
-              Démarrer la transcription
-            </Button>
-          </div>
-        )}
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -720,7 +703,9 @@ export default function PanelistSessions() {
         panelist_name: user.user_metadata?.name ?? '',
         panelist_email: user.email ?? '',
         duration: recordedAudio.duration ?? 0,
-        audio_url: urlData.publicUrl
+        audio_url: urlData.publicUrl,
+        transcript: currentSession.transcript,
+        transcript_confidence: currentSession.transcript_confidence
       });
 
       toast({
