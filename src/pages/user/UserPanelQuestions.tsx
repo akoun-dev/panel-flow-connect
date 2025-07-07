@@ -713,42 +713,6 @@ export default function UserPanelQuestions() {
         />
       </motion.div>
 
-      {/* Section admin - conditionnelle mais hooks déjà appelés */}
-      {isPanelAdmin && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Créer un sondage</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PollCreator panelId={panelId!} onCreated={() => {
-                // reload polls
-                supabase
-                  .from('polls')
-                  .select('id, panel_id, question, created_at')
-                  .eq('panel_id', panelId!)
-                  .order('created_at', { ascending: false })
-                  .then(({ data, error }) => {
-                    if (!error && data) setPolls(data as Poll[]);
-                  });
-              }} />
-            </CardContent>
-          </Card>
-
-          {polls.length > 0 && (
-            <div className="mt-6 space-y-4">
-              {polls.map((p) => (
-                <Card key={p.id}>
-                  <CardContent>
-                    <PollViewer pollId={p.id} />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      )}
-
       {/* Controls */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

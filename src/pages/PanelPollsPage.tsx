@@ -58,21 +58,19 @@ import { useToast } from '@/components/ui/use-toast';
 import PollsQRCode from '@/components/polls/PollsQRCode';
 import { PollCreator } from '@/components/polls/PollCreator';
 import { PollEditor } from '@/components/polls/PollEditor';
-import type { Poll } from '@/types/poll';
+import type { Poll, PollOption } from '@/types/poll';
 
-interface PollOption {
-  id: string;
-  text: string;
+interface ExtendedPollOption extends PollOption {
   vote_count: number;
 }
 
 interface ExtendedPoll extends Poll {
   total_votes: number;
   unique_voters: number;
-  options: PollOption[];
+  options: ExtendedPollOption[];
   status?: 'active' | 'draft' | 'closed';
   participation_rate: number;
-  winner_option?: PollOption;
+  winner_option?: ExtendedPollOption;
   engagement_score: number;
 }
 
@@ -106,7 +104,7 @@ export default function PanelPollsPage() {
 
   // Mémoisation des sondages filtrés et triés
   const filteredAndSortedPolls = useMemo(() => {
-    let filtered = polls.filter(poll => {
+    const filtered = polls.filter(poll => {
       const matchesSearch = poll.question.toLowerCase().includes(searchTerm.toLowerCase());
       const pollStatus = poll.status || 'active';
       const matchesStatus = filterStatus === 'all' || pollStatus === filterStatus;
@@ -114,8 +112,8 @@ export default function PanelPollsPage() {
     });
 
     filtered.sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
+      let aValue: string | number | Date = a[sortField];
+      let bValue: string | number | Date = b[sortField];
       
       if (sortField === 'created_at') {
         aValue = new Date(aValue).getTime();
@@ -138,7 +136,7 @@ export default function PanelPollsPage() {
     const totalVotes = polls.reduce((sum, poll) => sum + poll.total_votes, 0);
     const totalParticipants = polls.reduce((sum, poll) => sum + poll.unique_voters, 0);
     const averageVotes = total > 0 ? Math.round(totalVotes / total) : 0;
-    const mostPopular = polls.reduce((max, poll) => 
+    const mostPopular = polls.reduce<ExtendedPoll | null>((max, poll) =>
       poll.total_votes > (max?.total_votes || 0) ? poll : max, null);
     
     return {
@@ -184,8 +182,9 @@ export default function PanelPollsPage() {
 
       // Traitement des données côté client
       const pollsWithStats: ExtendedPoll[] = (pollsData || []).map(poll => {
-        const options: PollOption[] = (poll.poll_options || []).map(option => ({
+        const options: ExtendedPollOption[] = (poll.poll_options || []).map(option => ({
           id: option.id,
+          poll_id: poll.id, // Utilise l'ID du poll parent
           text: option.text,
           vote_count: option.poll_votes?.length || 0
         }));
@@ -498,9 +497,9 @@ export default function PanelPollsPage() {
           )}
         </DialogContent>
       </Dialog>
-      <div className="p-4 space-y-6 max-w-7xl mx-auto">
+      <div className="p-4 space-y-6 w-full h-full">
       {/* En-tête avec statistiques globales */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
         <div className="lg:col-span-2">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Tableau de bord des sondages
@@ -535,9 +534,7 @@ export default function PanelPollsPage() {
         </Card>
       </div>
 
-      <div className="flex justify-center">
-        <PollsQRCode panelId={panelId} url={window.location.origin} />
-      </div>
+
 
       {/* Barre d'outils */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
@@ -699,7 +696,7 @@ export default function PanelPollsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className={`grid gap-6 ${
+        <div className={`grid gap-6 w-full ${
           viewMode === 'grid' ? 'md:grid-cols-2 xl:grid-cols-3' : 
           viewMode === 'compact' ? 'grid-cols-1' : 'grid-cols-1'
         }`}>
