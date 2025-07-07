@@ -2,16 +2,14 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { PanelService } from "@/services/panelService";
 import { useUser } from "@/hooks/useUser";
-import { 
+import {
   LayoutDashboard,
   Mic,
-  Calendar, 
+  Calendar,
   MessageSquare,
-  FileText,
   Clock,
   Menu,
   X,
@@ -19,7 +17,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const panelistMenuItems = [
@@ -64,7 +61,6 @@ function CurrentTime() {
 export function UserLayout({ children }: UserLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [hasOwnPanel, setHasOwnPanel] = useState(false);
   const { user } = useUser();
   const location = useLocation();
 
@@ -74,12 +70,7 @@ export function UserLayout({ children }: UserLayoutProps) {
     });
   }, []);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    PanelService.hasOwnPanel(user.id, user.email).then(setHasOwnPanel).catch(() => setHasOwnPanel(false));
-  }, [user]);
-
-  const menuItems = hasOwnPanel ? panelistMenuItems : panelistMenuItems.filter(item => item.url !== '/panels');
+  const menuItems = panelistMenuItems;
 
   return (
       <div className="min-h-screen bg-gradient-to-br from-[#84c282]/20 to-[#5cbcb4]/30 dark:from-[#347080] dark:to-[#045ca4]">
