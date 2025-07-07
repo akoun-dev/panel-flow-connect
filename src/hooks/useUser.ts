@@ -19,6 +19,12 @@ export function useUser() {
     };
 
     fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   return { user };
