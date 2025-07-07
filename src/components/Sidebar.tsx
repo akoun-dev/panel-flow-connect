@@ -1,6 +1,6 @@
 
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Calendar, 
   Users, 
@@ -33,6 +33,7 @@ const menuItems = [
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname;
+  const isMobile = useIsMobile();
 
   return (
     <>
@@ -73,7 +74,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   )}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {(isOpen || window.innerWidth < 768) && (
+                  {(isOpen || isMobile) && (
                     <span className="truncate">{item.title}</span>
                   )}
                 </NavLink>
