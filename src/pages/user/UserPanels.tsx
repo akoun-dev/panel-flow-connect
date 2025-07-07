@@ -873,13 +873,8 @@ export function UserPanels() {
     );
   }
 
-  if (!hasOwnPanel) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Accès interdit
-      </div>
-    );
-  }
+
+
 
   return (
     <div className="min-h-screen bg-gray-50/50 w-full">

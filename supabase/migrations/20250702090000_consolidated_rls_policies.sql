@@ -1,15 +1,43 @@
 -- Migration consolidée pour appliquer les politiques RLS et droits nécessaires
 
--- Suppression des anciennes politiques conflictuelles
+-- 1. Suppression des politiques existantes pour éviter les conflits
+DROP POLICY IF EXISTS "Allow insert for auth service" ON public.users;
+DROP POLICY IF EXISTS "Allow select for authenticated users" ON public.users;
+DROP POLICY IF EXISTS "Users can manage their own profile" ON public.users;
+
 DROP POLICY IF EXISTS "Users can manage their panel invitations" ON public.panel_invitations;
 DROP POLICY IF EXISTS "Panelists can read their invitations" ON public.panel_invitations;
 DROP POLICY IF EXISTS "Panelists can update their invitation status" ON public.panel_invitations;
 DROP POLICY IF EXISTS "Public can read invitations" ON public.panel_invitations;
-DROP POLICY IF EXISTS "Authenticated users can read panels" ON public.panels;
+
+DROP POLICY IF EXISTS "Users can manage their panels" ON public.panels;
 DROP POLICY IF EXISTS "Users can read accessible panels" ON public.panels;
+DROP POLICY IF EXISTS "Authenticated users can read panels" ON public.panels;
+DROP POLICY IF EXISTS "Panelists can read panels they are invited to" ON public.panels;
+
 DROP POLICY IF EXISTS "Users can manage their planning entries" ON public.user_planning;
 
--- Politiques RLS pour panel_invitations
+-- 2. Création des politiques pour public.users
+CREATE POLICY "Allow insert for auth service"
+ON public.users
+FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+CREATE POLICY "Allow select for authenticated users"
+ON public.users
+FOR SELECT
+TO authenticated
+USING (id = auth.uid());
+
+CREATE POLICY "Users can manage their own profile"
+ON public.users
+FOR ALL
+TO authenticated
+USING (id = auth.uid())
+WITH CHECK (id = auth.uid());
+
+-- 3. Politiques pour public.panel_invitations
 CREATE POLICY "Users can manage their panel invitations"
 ON public.panel_invitations
 FOR ALL
@@ -36,7 +64,7 @@ FOR SELECT
 TO public
 USING (true);
 
--- Politiques RLS pour panels
+-- 4. Politiques pour public.panels
 CREATE POLICY "Users can manage their panels"
 ON public.panels
 FOR ALL
@@ -57,7 +85,7 @@ USING (
   )
 );
 
--- Politiques RLS pour user_planning
+-- 5. Politiques pour public.user_planning
 CREATE POLICY "Users can manage their planning entries"
 ON public.user_planning
 FOR ALL
@@ -65,31 +93,17 @@ TO authenticated
 USING (user_id = auth.uid())
 WITH CHECK (user_id = auth.uid());
 
--- Politiques RLS pour users (ajout pour permettre inscription)
-CREATE POLICY "Allow insert for auth service"
-ON public.users
-FOR INSERT
-TO authenticated
-WITH CHECK (true);
-
-CREATE POLICY "Allow select for authenticated users"
-ON public.users
-FOR SELECT
-TO authenticated
-USING (id = auth.uid());
-
-
--- Droits d'exécution sur fonctions
-GRANT EXECUTE ON FUNCTION get_user_invitations(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION user_can_access_panel(UUID) TO authenticated;
-
--- Activer RLS sur les tables si ce n'est pas déjà fait
+-- 6. Activation RLS (sécurisé)
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.panels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.panel_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_planning ENABLE ROW LEVEL SECURITY;
 
--- Triggers de mise à jour des timestamps (fonctions déjà définies)
+-- 7. Droits sur fonctions
+GRANT EXECUTE ON FUNCTION get_user_invitations(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION user_can_access_panel(UUID) TO authenticated;
 
+-- 8. Triggers de mise à jour des timestamps
 DROP TRIGGER IF EXISTS panels_updated_at ON panels;
 CREATE TRIGGER panels_updated_at
 BEFORE UPDATE ON panels

@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Users can manage their own profile" ON public.users;
+
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 -- Politique permettant aux utilisateurs de créer/mettre à jour leur propre profil
