@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from 'react-router-dom';
@@ -8,6 +8,7 @@ import { generateUUID } from "@/lib/uuid";
 import { useUser } from "@/hooks/useUser";
 import SessionService from "@/services/SessionService";
 import TranscriptionService from "@/services/TranscriptionService";
+import { PanelService } from "@/services/panelService";
 import type { Session } from "@/types/session";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -93,6 +94,16 @@ interface AudioRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
   onRecordingStart: () => void;
   onRecordingStop: () => void;
+  /**
+   * Durée maximale d'enregistrement en secondes.
+   * Si définie, un compte à rebours est affiché et
+   * l'enregistrement s'arrête automatiquement à zéro.
+   */
+  maxDuration?: number;
+  /**
+   * Lance immédiatement l'enregistrement au montage du composant.
+   */
+  autoStart?: boolean;
 }
 
 interface TranscriptionPanelProps {
@@ -135,10 +146,12 @@ const formatDuration = (seconds: number) => {
 };
 
 // Composant AudioRecorder
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ 
-  onRecordingComplete, 
-  onRecordingStart, 
-  onRecordingStop 
+const AudioRecorder: React.FC<AudioRecorderProps> = ({
+  onRecordingComplete,
+  onRecordingStart,
+  onRecordingStop,
+  maxDuration,
+  autoStart
 }) => {
   const [recordingState, setRecordingState] = useState<RecordingState>({
     isRecording: false,
@@ -231,6 +244,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
     intervalRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTimeRef.current - pausedTimeRef.current) / 1000);
+      if (maxDuration && elapsed >= maxDuration) {
+        setRecordingState(prev => ({ ...prev, duration: maxDuration }));
+        stopRecording();
+        return;
+      }
       setRecordingState(prev => ({ ...prev, duration: elapsed }));
     }, 1000);
 
@@ -255,6 +273,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       
       intervalRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - startTimeRef.current - pausedTimeRef.current) / 1000);
+        if (maxDuration && elapsed >= maxDuration) {
+          setRecordingState(prev => ({ ...prev, duration: maxDuration }));
+          stopRecording();
+          return;
+        }
         setRecordingState(prev => ({ ...prev, duration: elapsed }));
       }, 1000);
     }
@@ -322,6 +345,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     };
   }, []);
 
+  // Lancement automatique de l'enregistrement si demandé
+  useEffect(() => {
+    if (autoStart && !recordingState.isRecording) {
+      startRecording();
+    }
+  }, [autoStart]);
+
   return (
     <Card className="w-full">
       <CardContent className="p-6">
@@ -350,7 +380,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           </div>
           
           <div className="text-2xl font-mono font-bold text-gray-700">
-            {formatDuration(recordingState.duration)}
+            {maxDuration
+              ? formatDuration(Math.max(maxDuration - recordingState.duration, 0))
+              : formatDuration(recordingState.duration)}
           </div>
         </div>
 
@@ -460,7 +492,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
                 <span className="font-medium text-green-800">Enregistrement terminé</span>
               </div>
               <Badge variant="outline" className="text-green-700">
-                {formatDuration(recordingState.duration)}
+                {maxDuration
+                  ? formatDuration(Math.max(maxDuration - recordingState.duration, 0))
+                  : formatDuration(recordingState.duration)}
               </Badge>
             </div>
             
@@ -620,9 +654,11 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
 interface NewSessionFormProps {
   onSubmit: (sessionData: Partial<Session>, audioBlob: Blob, duration: number) => void;
   onCancel: () => void;
+  autoStart?: boolean;
+  maxDuration?: number;
 }
 
-const NewSessionForm: React.FC<NewSessionFormProps> = ({ onSubmit, onCancel }) => {
+const NewSessionForm: React.FC<NewSessionFormProps> = ({ onSubmit, onCancel, autoStart, maxDuration }) => {
   const [sessionData, setSessionData] = useState<Partial<Session>>({
     title: '',
     description: '',
@@ -720,6 +756,8 @@ const NewSessionForm: React.FC<NewSessionFormProps> = ({ onSubmit, onCancel }) =
         onRecordingComplete={handleRecordingComplete}
         onRecordingStart={() => setSessionData(prev => ({ ...prev, status: 'recording' }))}
         onRecordingStop={() => setSessionData(prev => ({ ...prev, status: 'completed' }))}
+        autoStart={autoStart}
+        maxDuration={maxDuration}
       />
 
       {/* Transcription */}
@@ -758,6 +796,8 @@ const UserPanelistSession: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'oldest' | 'duration'>('recent');
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
+  const [allocatedTimeSeconds, setAllocatedTimeSeconds] = useState<number | null>(null);
+  const [autoStartRecording, setAutoStartRecording] = useState(false);
 
   const { data: sessions = [], isLoading, isError, refetch } = useQuery<Session[]>({
     queryKey: ['panelist-sessions', panelId, user?.email],
@@ -765,6 +805,24 @@ const UserPanelistSession: React.FC = () => {
     enabled: !!panelId && !!user?.email,
     refetchOnWindowFocus: false
   });
+
+  // Charger le temps alloué du panel et démarrer automatiquement l'enregistrement
+  useEffect(() => {
+    const fetchPanel = async () => {
+      if (!panelId) return;
+      try {
+        const panel = await PanelService.getPanelById(panelId);
+        if (panel.allocated_time) {
+          setAllocatedTimeSeconds(panel.allocated_time * 60);
+        }
+        setShowNewSessionDialog(true);
+        setAutoStartRecording(true);
+      } catch (err) {
+        console.error('Erreur chargement panel', err);
+      }
+    };
+    fetchPanel();
+  }, [panelId]);
 
   const handleNewSession = async (
     sessionData: Partial<Session>, 
@@ -895,6 +953,8 @@ const UserPanelistSession: React.FC = () => {
             <NewSessionForm
               onSubmit={handleNewSession}
               onCancel={() => setShowNewSessionDialog(false)}
+              autoStart={autoStartRecording}
+              maxDuration={allocatedTimeSeconds}
             />
           </DialogContent>
         </Dialog>
