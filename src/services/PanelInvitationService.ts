@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
+import { generateUUID } from '@/lib/uuid';
 import { Panel, Panelist } from '@/types/panel';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -46,7 +47,7 @@ class PanelInvitationService {
 
   static async sendInvitation(panel: { id: string; title: string }, panelist: { email: string; id?: string; name?: string }): Promise<void> {
     const isRegistered = await this.checkUserRegistration(panelist.email);
-    const uniqueToken = crypto.randomUUID();
+    const uniqueToken = generateUUID();
     
     // Récupérer l'ID de l'utilisateur authentifié
     const { data: { user } } = await supabase.auth.getUser();
@@ -142,7 +143,7 @@ class PanelInvitationService {
   }
 
   static generateUniqueLink(panelId: string, panelistId: string): string {
-    const token = crypto.randomUUID();
+    const token = generateUUID();
     return `${window.location.origin}/panel/join?token=${token}`;
   }
 
@@ -219,7 +220,7 @@ class PanelInvitationService {
       throw new Error('Cet email n\'est pas associé à un compte utilisateur');
     }
 
-    const token = crypto.randomUUID();
+    const token = generateUUID();
     const { error } = await supabase
       .from('panel_invitations')
       .insert({

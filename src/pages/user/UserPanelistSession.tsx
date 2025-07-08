@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from 'react-router-dom';
 import { supabase } from "@/lib/supabase";
 import { logger } from "@/lib/logger";
+import { generateUUID } from "@/lib/uuid";
 import { useUser } from "@/hooks/useUser";
 import SessionService from "@/services/SessionService";
 import TranscriptionService from "@/services/TranscriptionService";
@@ -685,7 +686,7 @@ export default function PanelistSessions() {
     if (!currentSession.title || !recordedAudio.blob || !panelId || !user) return;
 
     try {
-      const fileName = `${crypto.randomUUID()}.mp3`;
+      const fileName = `${generateUUID()}.mp3`;
       const { error: uploadErr } = await supabase.storage
         .from('recordings')
         .upload(fileName, recordedAudio.blob, { contentType: 'audio/mpeg' });

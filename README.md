@@ -139,6 +139,9 @@ L'organisateur peut inviter des participants en saisissant leurs adresses e‑ma
 - Les sessions audio sont désormais converties en MP3 avant l'envoi vers Supabase.
 - Les lecteurs intégrés utilisent directement ces fichiers `.mp3`.
 
+### UUID helper (08/07/2025)
+- Nouvelle fonction `generateUUID()` dans `src/lib/uuid.ts` qui utilise `crypto.randomUUID` si disponible et bascule sur une implémentation maison sinon.
+
 ## Speech to text
 
 Pour générer automatiquement la transcription (Speech to text) des audios, renseignez la variable

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { generateUUID } from '@/lib/uuid';
 
 import type { Panel, Panelist } from '@/types/panel';
 
@@ -27,7 +28,7 @@ export const PanelService = {
       end_time?: string;
     }
   ) {
-    const generatedId = crypto.randomUUID();
+    const generatedId = generateUUID();
     const qrUrl = `${window.location.origin}/panel/${generatedId}/polls`;
 
     const { data, error } = await supabase
