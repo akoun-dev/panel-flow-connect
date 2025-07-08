@@ -178,9 +178,21 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
+  const { toast } = useToast();
 
   const initializeRecording = async () => {
     try {
+      // Vérifie la disponibilité de l'API getUserMedia avant de poursuivre
+      if (!navigator || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('API getUserMedia indisponible : impossible de démarrer l\'enregistrement');
+        toast({
+          title: 'Enregistrement non supporté',
+          description: 'Votre navigateur ne permet pas la capture audio.',
+          variant: 'destructive'
+        });
+        return false;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
