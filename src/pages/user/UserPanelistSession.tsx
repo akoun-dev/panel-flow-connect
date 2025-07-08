@@ -113,30 +113,41 @@ interface TranscriptionPanelProps {
 
 // Utilitaires
 const convertToMp3 = async (inputBlob: Blob): Promise<Blob> => {
-  const { default: lamejs } = await import('lamejs');
-  const arrayBuffer = await inputBlob.arrayBuffer();
-  const ctx = new AudioContext();
-  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-  const samples = audioBuffer.getChannelData(0);
-  const mp3encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
-  const sampleBlockSize = 1152;
-  const mp3Data: Uint8Array[] = [];
-  const converted = new Int16Array(samples.length);
+  // Solution simplifiée - retourne le blob original si la conversion échoue
+  try {
+    const { default: lamejs } = await import('lamejs');
+    if (!lamejs?.Mp3Encoder) {
+      console.warn('lamejs.Mp3Encoder non disponible - retour du format original');
+      return inputBlob;
+    }
 
-  for (let i = 0; i < samples.length; i++) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    converted[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-  }
+    const arrayBuffer = await inputBlob.arrayBuffer();
+    const ctx = new AudioContext();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    const samples = audioBuffer.getChannelData(0);
+    const mp3encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
+    const sampleBlockSize = 1152;
+    const mp3Data: Uint8Array[] = [];
+    const converted = new Int16Array(samples.length);
 
-  for (let i = 0; i < converted.length; i += sampleBlockSize) {
-    const chunk = converted.subarray(i, i + sampleBlockSize);
-    const mp3buf = mp3encoder.encodeBuffer(chunk);
-    if (mp3buf.length > 0) mp3Data.push(mp3buf);
+    for (let i = 0; i < samples.length; i++) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      converted[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+
+    for (let i = 0; i < converted.length; i += sampleBlockSize) {
+      const chunk = converted.subarray(i, i + sampleBlockSize);
+      const mp3buf = mp3encoder.encodeBuffer(chunk);
+      if (mp3buf.length > 0) mp3Data.push(mp3buf);
+    }
+    const endBuf = mp3encoder.flush();
+    if (endBuf.length > 0) mp3Data.push(endBuf);
+    ctx.close();
+    return new Blob(mp3Data, { type: 'audio/mpeg' });
+  } catch (error) {
+    console.error('Erreur conversion MP3:', error);
+    return inputBlob; // Retourne le format original en cas d'erreur
   }
-  const endBuf = mp3encoder.flush();
-  if (endBuf.length > 0) mp3Data.push(endBuf);
-  ctx.close();
-  return new Blob(mp3Data, { type: 'audio/mpeg' });
 };
 
 const formatDuration = (seconds: number) => {
@@ -204,10 +215,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       };
 
       mediaRecorder.onstop = async () => {
-        let blob = new Blob(chunks, { type: mediaRecorder.mimeType });
-        if (mediaRecorder.mimeType !== 'audio/mpeg') {
-          blob = await convertToMp3(blob);
-        }
+        const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
+        // On conserve le format original pour éviter les problèmes de conversion
         const audioUrl = URL.createObjectURL(blob);
 
         setRecordingState(prev => ({
@@ -345,12 +354,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     };
   }, []);
 
-  // Lancement automatique de l'enregistrement si demandé
-  useEffect(() => {
-    if (autoStart && !recordingState.isRecording) {
-      startRecording();
-    }
-  }, [autoStart]);
+  // L'enregistrement ne démarre plus automatiquement
+  // (supprimé pour respecter la demande utilisateur)
 
   return (
     <Card className="w-full">
@@ -697,11 +702,11 @@ const NewSessionForm: React.FC<NewSessionFormProps> = ({ onSubmit, onCancel, aut
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Titre de la session *</label>
+            <label className="block text-sm font-medium mb-2">Sujet à aborder *</label>
             <Input
               value={sessionData.title}
               onChange={(e) => setSessionData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Ex: Discussion sur la stratégie 2024"
+              placeholder="Ex: La stratégie marketing pour 2024"
             />
           </div>
           
@@ -816,9 +821,13 @@ const UserPanelistSession: React.FC = () => {
           setAllocatedTimeSeconds(panel.allocated_time * 60);
         }
         setShowNewSessionDialog(true);
-        setAutoStartRecording(true);
       } catch (err) {
         console.error('Erreur chargement panel', err);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger les informations du panel',
+          variant: 'destructive'
+        });
       }
     };
     fetchPanel();
@@ -932,8 +941,8 @@ const UserPanelistSession: React.FC = () => {
       {/* En-tête avec bouton nouvelle session */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mes Sessions</h1>
-          <p className="text-gray-600">Gérez vos enregistrements et transcriptions</p>
+          <h1 className="text-3xl font-bold text-gray-900">Sessions Paneliste</h1>
+          <p className="text-gray-600">Enregistrez vos contributions sur les sujets du panel</p>
         </div>
         
         <Dialog open={showNewSessionDialog} onOpenChange={setShowNewSessionDialog}>
