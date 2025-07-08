@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { PanelService } from '@/services/panelService';
-import { PollViewer } from '@/components/polls/PollViewer';
 import { supabase } from '@/lib/supabase';
 import type { Panel, Poll } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,7 +68,7 @@ export default function Projection() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   
   // Références pour le nettoyage
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
   // Sons de notification (optionnel)
@@ -674,26 +673,37 @@ export default function Projection() {
           {/* Sidebar avec sondages et activité récente */}
           <div className="col-span-4 space-y-6">
             
-            {/* Sondages temps réel */}
-            {polls.length > 0 && (
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-orange-600" />
-                    Sondages Live
-                    <Badge variant="secondary">{polls.length}</Badge>
-                    <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse ml-auto" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {polls.map((poll) => (
-                    <div key={poll.id} className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-                      <PollViewer pollId={poll.id} />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+            {/* Liste des panelistes */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  Panélistes
+                  <Badge variant="secondary">{panel?.panelists?.length || 0}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {panel?.panelists?.length ? (
+                  <div className="space-y-3">
+                    {panel.panelists.map((panelist, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
+                          {panelist.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{panelist.name}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Users className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                    <p className="text-gray-500 text-sm">Aucun panéliste</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Activité récente */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
