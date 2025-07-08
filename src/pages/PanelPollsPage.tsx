@@ -731,9 +731,6 @@ export default function PanelPollsPage() {
                         </Badge>
                       )}
                     </div>
-                    <CardTitle className="text-lg leading-tight mb-2 hover:text-blue-600 transition-colors cursor-pointer">
-                      {poll.question}
-                    </CardTitle>
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -754,10 +751,29 @@ export default function PanelPollsPage() {
                           <Copy className="h-4 w-4 mr-2" />
                           Copier le lien
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleSharePoll(poll)}>
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Partager
-                        </DropdownMenuItem>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Share2 className="h-4 w-4 mr-2" />
+                              Partager (QR Code)
+                            </DropdownMenuItem>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Partager le sondage</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex flex-col items-center gap-4 p-4">
+                              <PollsQRCode pollId={poll.id} />
+                              <Button
+                                variant="outline"
+                                onClick={() => handleSharePoll(poll)}
+                              >
+                                <Share2 className="h-4 w-4 mr-2" />
+                                Partager par lien
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                         <DropdownMenuItem onClick={() => handleExportPoll(poll)}>
                           <Download className="h-4 w-4 mr-2" />
                           Exporter les résultats
@@ -809,8 +825,13 @@ export default function PanelPollsPage() {
                                     <h4 className="font-semibold mb-3">Résultats détaillés</h4>
                                     <PollResults poll={poll} />
                                   </div>
+                                  <div className="flex flex-col items-center gap-4">
+                                    <h4 className="font-semibold">Partager via QR Code</h4>
+                                    <PollsQRCode pollId={poll.id} size={150} />
+                                  </div>
                                 </div>
                               </div>
+                              
                             </DialogContent>
                           </Dialog>
                         </div>
@@ -857,10 +878,29 @@ export default function PanelPollsPage() {
                 
                 {viewMode !== 'compact' && (
                   <div className="flex gap-2 pt-4 border-t">
-                    <Button variant="outline" size="sm" onClick={() => handleSharePoll(poll)}>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Partager
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Partager (QR Code)
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Partager le sondage</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-col items-center gap-4 p-4">
+                          <PollsQRCode pollId={poll.id} />
+                          <Button
+                            variant="outline"
+                            onClick={() => handleSharePoll(poll)}
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Partager par lien
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                     <Button variant="outline" size="sm" onClick={() => handleExportPoll(poll)}>
                       <Download className="h-4 w-4 mr-2" />
                       Exporter

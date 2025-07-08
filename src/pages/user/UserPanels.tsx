@@ -1287,7 +1287,7 @@ export function UserPanels() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        window.location.href = `/panel/${managePanelModal.panel!.id}/questions`;
+                        window.location.href = `/panel/${managePanelModal.panel!.id}/polls`;
                       }}
                       className="flex items-center gap-2"
                     >
@@ -1303,33 +1303,7 @@ export function UserPanels() {
                       <Users className="h-4 w-4" />
                       Inviter
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigator.clipboard.writeText(window.location.origin + `/panel/${managePanelModal.panel!.id}`)}
-                      className="flex items-center gap-2"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Partager
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toast.success("Export en cours...")}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      Exporter
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toast.success("Duplication en cours...")}
-                      className="flex items-center gap-2"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Dupliquer
-                    </Button>
+
                   </div>
                 </div>
 

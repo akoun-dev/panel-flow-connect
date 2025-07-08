@@ -1803,45 +1803,7 @@ export function UserDashboard() {
                                         <Users className="h-4 w-4" />
                                         Inviter
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            handleSharePanel(
-                                                managePanelModal.panel!
-                                            )
-                                        }
-                                        className="flex items-center gap-2"
-                                    >
-                                        <Share2 className="h-4 w-4" />
-                                        Partager
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            handleExportPanel(
-                                                managePanelModal.panel!
-                                            )
-                                        }
-                                        className="flex items-center gap-2"
-                                    >
-                                        <Download className="h-4 w-4" />
-                                        Exporter
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            handleDuplicatePanel(
-                                                managePanelModal.panel!
-                                            )
-                                        }
-                                        className="flex items-center gap-2"
-                                    >
-                                        <Copy className="h-4 w-4" />
-                                        Dupliquer
-                                    </Button>
+
                                 </div>
                             </div>
 

@@ -5,7 +5,7 @@ import { Download, Share2, Copy } from 'lucide-react';
 import { useToast } from '../ui/use-toast';
 
 interface PollsQRCodeProps {
-  panelId: string;
+  pollId: string;
   size?: number;
   /**
    * Base URL used to generate the QR code. Defaults to
@@ -14,11 +14,11 @@ interface PollsQRCodeProps {
   url?: string;
 }
 
-export default function PollsQRCode({ panelId, size = 128, url }: PollsQRCodeProps) {
+export default function PollsQRCode({ pollId, size = 128, url }: PollsQRCodeProps) {
   const { toast } = useToast();
   const qrRef = useRef<HTMLDivElement>(null);
 
-  const qrValue = `${url ?? window.location.origin}/panel/${panelId}/polls`;
+  const qrValue = `${url ?? window.location.origin}/poll/${pollId}`;
 
   const handleDownload = () => {
     if (!qrRef.current) return;
@@ -35,7 +35,7 @@ export default function PollsQRCode({ panelId, size = 128, url }: PollsQRCodePro
       ctx?.drawImage(img, 0, 0);
       const png = canvas.toDataURL('image/png');
       const a = document.createElement('a');
-      a.download = `qrcode-panel-polls-${panelId}.png`;
+      a.download = `qrcode-poll-${pollId}.png`;
       a.href = png;
       a.click();
     };

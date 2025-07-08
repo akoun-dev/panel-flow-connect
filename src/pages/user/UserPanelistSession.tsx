@@ -29,32 +29,21 @@ import {
   Users,
   Download,
   Upload,
-  Settings,
   Volume2,
   VolumeX,
-  RotateCcw,
   Save,
   Edit3,
   Trash2,
   Eye,
-  EyeOff,
-  MessageSquare,
-  Headphones,
-  Radio,
-  Activity,
-  Zap,
   CheckCircle2,
   AlertCircle,
-  Info,
   Star,
   MoreHorizontal,
   Share2,
-  Filter,
   Search,
-  SortAsc,
-  SortDesc,
   RefreshCw,
-  PlusCircle
+  Radio,
+  Activity
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -90,7 +79,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 
-
+// Types
 interface RecordingState {
   isRecording: boolean;
   isPaused: boolean;
@@ -100,7 +89,18 @@ interface RecordingState {
   audioUrl?: string;
 }
 
-// Conversion WebM/PCM vers MP3 à l'aide de lamejs
+interface AudioRecorderProps {
+  onRecordingComplete: (blob: Blob, duration: number) => void;
+  onRecordingStart: () => void;
+  onRecordingStop: () => void;
+}
+
+interface TranscriptionPanelProps {
+  audioBlob?: Blob;
+  onTranscriptionComplete: (transcript: string, confidence: number) => void;
+}
+
+// Utilitaires
 const convertToMp3 = async (inputBlob: Blob): Promise<Blob> => {
   const { default: lamejs } = await import('lamejs');
   const arrayBuffer = await inputBlob.arrayBuffer();
@@ -128,11 +128,17 @@ const convertToMp3 = async (inputBlob: Blob): Promise<Blob> => {
   return new Blob(mp3Data, { type: 'audio/mpeg' });
 };
 
-// Composant pour l'enregistrement audio
-const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop }: {
-  onRecordingComplete: (blob: Blob, duration: number) => void;
-  onRecordingStart: () => void;
-  onRecordingStop: () => void;
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+// Composant AudioRecorder
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ 
+  onRecordingComplete, 
+  onRecordingStart, 
+  onRecordingStop 
 }) => {
   const [recordingState, setRecordingState] = useState<RecordingState>({
     isRecording: false,
@@ -149,7 +155,6 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
 
-  // Obtenir les permissions et initialiser l'enregistrement
   const initializeRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -170,7 +175,7 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
       source.connect(analyserRef.current);
       analyserRef.current.fftSize = 256;
 
-      // Configuration du MediaRecorder en privilégiant l'export MP3
+      // Configuration du MediaRecorder
       let mimeType = 'audio/mpeg';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = 'audio/webm;codecs=opus';
@@ -210,12 +215,11 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
     }
   };
 
-  // Commencer l'enregistrement
   const startRecording = async () => {
     const initialized = await initializeRecording();
     if (!initialized || !mediaRecorderRef.current) return;
 
-    mediaRecorderRef.current.start(1000); // Chunk toutes les secondes
+    mediaRecorderRef.current.start(1000);
     startTimeRef.current = Date.now();
     
     setRecordingState(prev => ({
@@ -225,37 +229,28 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
       duration: 0
     }));
 
-    // Timer pour la durée
     intervalRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTimeRef.current - pausedTimeRef.current) / 1000);
       setRecordingState(prev => ({ ...prev, duration: elapsed }));
     }, 1000);
 
-    // Monitoring du niveau audio
     monitorAudioLevel();
     onRecordingStart();
   };
 
-  // Pauser l'enregistrement
   const pauseRecording = () => {
     if (mediaRecorderRef.current && recordingState.isRecording) {
       mediaRecorderRef.current.pause();
       pausedTimeRef.current += Date.now() - startTimeRef.current;
-      
       setRecordingState(prev => ({ ...prev, isPaused: true }));
-      
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     }
   };
 
-  // Reprendre l'enregistrement
   const resumeRecording = () => {
     if (mediaRecorderRef.current && recordingState.isPaused) {
       mediaRecorderRef.current.resume();
       startTimeRef.current = Date.now();
-      
       setRecordingState(prev => ({ ...prev, isPaused: false }));
       
       intervalRef.current = setInterval(() => {
@@ -265,7 +260,6 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
     }
   };
 
-  // Arrêter l'enregistrement
   const stopRecording = () => {
     if (mediaRecorderRef.current && recordingState.isRecording) {
       mediaRecorderRef.current.stop();
@@ -294,7 +288,6 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
     }
   };
 
-  // Monitoring du niveau audio
   const monitorAudioLevel = () => {
     if (!analyserRef.current) return;
 
@@ -317,14 +310,6 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
     updateLevel();
   };
 
-  // Formater la durée
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Nettoyage
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -492,10 +477,10 @@ const AudioRecorder = ({ onRecordingComplete, onRecordingStart, onRecordingStop 
   );
 };
 
-// Composant pour la transcription
-const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
-  audioBlob?: Blob;
-  onTranscriptionComplete: (transcript: string, confidence: number) => void;
+// Composant TranscriptionPanel
+const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({ 
+  audioBlob, 
+  onTranscriptionComplete 
 }) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -504,25 +489,32 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const run = async () => {
-      if (!audioBlob) return;
+    if (!audioBlob) return;
+
+    const transcribeAudio = async () => {
       setIsTranscribing(true);
       setTranscript('');
       setError('');
+      
       try {
         const text = await TranscriptionService.transcribeAudio(audioBlob);
         setTranscript(text);
         setConfidence(100);
         onTranscriptionComplete(text, 100);
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error('transcription error', err);
-        setError('Erreur lors de la transcription');
+        setError(
+          err instanceof Error
+            ? `Erreur lors de la transcription: ${err.message}`
+            : 'Erreur lors de la transcription'
+        );
       } finally {
         setIsTranscribing(false);
       }
     };
-    run();
-  }, [audioBlob]);
+
+    transcribeAudio();
+  }, [audioBlob, onTranscriptionComplete]);
 
   const saveTranscription = () => {
     onTranscriptionComplete(transcript, confidence);
@@ -624,14 +616,14 @@ const TranscriptionPanel = ({ audioBlob, onTranscriptionComplete }: {
   );
 };
 
-// Composant principal
-export default function PanelistSessions() {
-  const { panelId } = useParams<{ panelId: string }>();
-  const { user } = useUser();
-  const { toast } = useToast();
-  
-  // États pour la session en cours
-  const [currentSession, setCurrentSession] = useState<Partial<Session>>({
+// Interface pour nouveau session
+interface NewSessionFormProps {
+  onSubmit: (sessionData: Partial<Session>, audioBlob: Blob, duration: number) => void;
+  onCancel: () => void;
+}
+
+const NewSessionForm: React.FC<NewSessionFormProps> = ({ onSubmit, onCancel }) => {
+  const [sessionData, setSessionData] = useState<Partial<Session>>({
     title: '',
     description: '',
     status: 'draft',
@@ -639,13 +631,129 @@ export default function PanelistSessions() {
     recording_quality: 'high',
     tags: []
   });
-  
+
   const [recordedAudio, setRecordedAudio] = useState<{
     blob?: Blob;
-    url?: string;
     duration?: number;
   }>({});
 
+  const handleRecordingComplete = (blob: Blob, duration: number) => {
+    setRecordedAudio({ blob, duration });
+    setSessionData(prev => ({ ...prev, status: 'completed' }));
+  };
+
+  const handleTranscriptionComplete = (transcript: string, confidence: number) => {
+    setSessionData(prev => ({
+      ...prev,
+      transcript,
+      transcript_confidence: confidence
+    }));
+  };
+
+  const handleSubmit = () => {
+    if (!sessionData.title || !recordedAudio.blob || !recordedAudio.duration) return;
+    onSubmit(sessionData, recordedAudio.blob, recordedAudio.duration);
+  };
+
+  return (
+    <div className="space-y-6 w-full">
+      {/* Informations de session */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Titre de la session *</label>
+            <Input
+              value={sessionData.title}
+              onChange={(e) => setSessionData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Ex: Discussion sur la stratégie 2024"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Description</label>
+            <Textarea
+              value={sessionData.description}
+              onChange={(e) => setSessionData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Décrivez brièvement le contenu de cette session..."
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Qualité d'enregistrement</label>
+            <Select
+              value={sessionData.recording_quality}
+              onValueChange={(value: 'high' | 'medium' | 'low') =>
+                setSessionData(prev => ({ ...prev, recording_quality: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high">Haute qualité (recommandé)</SelectItem>
+                <SelectItem value="medium">Qualité moyenne</SelectItem>
+                <SelectItem value="low">Qualité faible</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="public"
+              checked={sessionData.is_public}
+              onChange={(e) => setSessionData(prev => ({ ...prev, is_public: e.target.checked }))}
+              className="rounded border-gray-300"
+            />
+            <label htmlFor="public" className="text-sm">
+              Rendre cette session publique
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Enregistrement audio */}
+      <AudioRecorder
+        onRecordingComplete={handleRecordingComplete}
+        onRecordingStart={() => setSessionData(prev => ({ ...prev, status: 'recording' }))}
+        onRecordingStop={() => setSessionData(prev => ({ ...prev, status: 'completed' }))}
+      />
+
+      {/* Transcription */}
+      {recordedAudio.blob && (
+        <TranscriptionPanel
+          audioBlob={recordedAudio.blob}
+          onTranscriptionComplete={handleTranscriptionComplete}
+        />
+      )}
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <Button variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={!sessionData.title || !recordedAudio.blob}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Sauvegarder
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Composant principal
+const UserPanelistSession: React.FC = () => {
+  const { panelId } = useParams<{ panelId: string }>();
+  const { user } = useUser();
+  const { toast } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'oldest' | 'duration'>('recent');
@@ -658,38 +766,18 @@ export default function PanelistSessions() {
     refetchOnWindowFocus: false
   });
 
-  const panelistSession = sessions[0];
-
-  // Gérer la fin d'enregistrement
-  const handleRecordingComplete = (blob: Blob, duration: number) => {
-    const audioUrl = URL.createObjectURL(blob);
-    setRecordedAudio({ blob, url: audioUrl, duration });
-    
-    setCurrentSession(prev => ({
-      ...prev,
-      duration,
-      status: 'completed'
-    }));
-  };
-
-  // Gérer la transcription
-  const handleTranscriptionComplete = (transcript: string, confidence: number) => {
-    setCurrentSession(prev => ({
-      ...prev,
-      transcript,
-      transcript_confidence: confidence
-    }));
-  };
-
-  // Sauvegarder la session
-  const saveSession = async () => {
-    if (!currentSession.title || !recordedAudio.blob || !panelId || !user) return;
+  const handleNewSession = async (
+    sessionData: Partial<Session>, 
+    audioBlob: Blob, 
+    duration: number
+  ) => {
+    if (!panelId || !user) return;
 
     try {
       const fileName = `${generateUUID()}.mp3`;
       const { error: uploadErr } = await supabase.storage
         .from('recordings')
-        .upload(fileName, recordedAudio.blob, { contentType: 'audio/mpeg' });
+        .upload(fileName, audioBlob, { contentType: 'audio/mpeg' });
 
       if (uploadErr) throw uploadErr;
 
@@ -698,15 +786,13 @@ export default function PanelistSessions() {
         .getPublicUrl(fileName);
 
       await SessionService.insert({
-        ...(currentSession as Omit<Session, 'id' | 'created_at' | 'updated_at'>),
+        ...(sessionData as Omit<Session, 'id' | 'created_at' | 'updated_at'>),
         panel_id: panelId,
         panelist_id: user.id,
         panelist_name: user.user_metadata?.name ?? '',
         panelist_email: user.email ?? '',
-        duration: recordedAudio.duration ?? 0,
+        duration,
         audio_url: urlData.publicUrl,
-        transcript: currentSession.transcript,
-        transcript_confidence: currentSession.transcript_confidence
       });
 
       toast({
@@ -714,24 +800,16 @@ export default function PanelistSessions() {
         description: 'Votre session a été enregistrée avec succès'
       });
 
-      // Reset
-      setCurrentSession({
-        title: '',
-        description: '',
-        status: 'draft',
-        is_public: false,
-        recording_quality: 'high',
-        tags: []
-      });
-      setRecordedAudio({});
       setShowNewSessionDialog(false);
       refetch();
 
-    } catch (error: any) {
-      console.error('Erreur lors de la sauvegarde:', error.message, error);
+    } catch (error: unknown) {
+      console.error('Erreur lors de la sauvegarde:', error);
       toast({
         title: 'Erreur',
-        description: `Impossible de sauvegarder la session${error?.message ? `: ${error.message}` : ''}`,
+        description: `Impossible de sauvegarder la session${
+          error instanceof Error && error.message ? `: ${error.message}` : ''
+        }`,
         variant: 'destructive'
       });
     }
@@ -758,12 +836,6 @@ export default function PanelistSessions() {
         return 0;
     }
   });
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const getStatusColor = (status: Session['status']) => {
     switch (status) {
@@ -799,143 +871,34 @@ export default function PanelistSessions() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* En-tête */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* En-tête avec bouton nouvelle session */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sessions Paneliste</h1>
-          <p className="text-gray-600">Enregistrez et transcrivez vos prises de parole</p>
+          <h1 className="text-3xl font-bold text-gray-900">Mes Sessions</h1>
+          <p className="text-gray-600">Gérez vos enregistrements et transcriptions</p>
         </div>
-
+        
         <Dialog open={showNewSessionDialog} onOpenChange={setShowNewSessionDialog}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Nouvelle Session
+              <Mic className="h-4 w-4 mr-2" />
+              Nouvelle session
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Créer une nouvelle session</DialogTitle>
               <DialogDescription>
-                Enregistrez votre prise de parole et obtenez un texte automatique (speech to text)
+                Enregistrez une nouvelle session audio avec transcription automatique.
               </DialogDescription>
             </DialogHeader>
-            
-            <div className="space-y-6">
-              {/* Informations de session */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Titre de la session *</label>
-                    <Input
-                      value={currentSession.title}
-                      onChange={(e) => setCurrentSession(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Ex: Discussion sur la stratégie 2024"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Description</label>
-                    <Textarea
-                      value={currentSession.description}
-                      onChange={(e) => setCurrentSession(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Décrivez brièvement le contenu de cette session..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Qualité d'enregistrement</label>
-                    <Select
-                      value={currentSession.recording_quality}
-                      onValueChange={(value: 'high' | 'medium' | 'low') => 
-                        setCurrentSession(prev => ({ ...prev, recording_quality: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="high">Haute qualité (recommandé)</SelectItem>
-                        <SelectItem value="medium">Qualité moyenne</SelectItem>
-                        <SelectItem value="low">Qualité faible</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="public"
-                      checked={currentSession.is_public}
-                      onChange={(e) => setCurrentSession(prev => ({ ...prev, is_public: e.target.checked }))}
-                      className="rounded border-gray-300"
-                    />
-                    <label htmlFor="public" className="text-sm">
-                      Rendre cette session publique
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Enregistrement audio */}
-              <AudioRecorder
-                onRecordingComplete={handleRecordingComplete}
-                onRecordingStart={() => setCurrentSession(prev => ({ ...prev, status: 'recording' }))}
-                onRecordingStop={() => setCurrentSession(prev => ({ ...prev, status: 'completed' }))}
-              />
-
-              {/* Transcription */}
-              {recordedAudio.blob && (
-                <TranscriptionPanel
-                  audioBlob={recordedAudio.blob}
-                  onTranscriptionComplete={handleTranscriptionComplete}
-                />
-              )}
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowNewSessionDialog(false);
-                    setCurrentSession({
-                      title: '',
-                      description: '',
-                      status: 'draft',
-                      is_public: false,
-                      recording_quality: 'high',
-                      tags: []
-                    });
-                    setRecordedAudio({});
-                  }}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  onClick={saveSession}
-                  disabled={!currentSession.title || !recordedAudio.blob}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Sauvegarder
-                </Button>
-              </div>
-            </div>
+            <NewSessionForm
+              onSubmit={handleNewSession}
+              onCancel={() => setShowNewSessionDialog(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
-
-      {panelistSession && (
-        <Card>
-          <CardContent className="text-center p-4">
-            <h2 className="text-xl font-semibold mb-1">{panelistSession.title}</h2>
-            <p className="text-gray-600">Durée prévue : {formatDuration(panelistSession.duration)}</p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1067,6 +1030,12 @@ export default function PanelistSessions() {
                   : 'Créez votre première session pour commencer'
                 }
               </p>
+              {!searchTerm && filterStatus === 'all' && (
+                <Button onClick={() => setShowNewSessionDialog(true)}>
+                  <Mic className="h-4 w-4 mr-2" />
+                  Créer une session
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -1225,4 +1194,6 @@ export default function PanelistSessions() {
       </div>
     </div>
   );
-}
+};
+
+export default UserPanelistSession;
