@@ -1,6 +1,10 @@
 import { PanelService } from '@/services/panelService';
 import { supabase } from '@/lib/supabase';
 
+jest.mock('@/lib/uuid', () => ({
+  generateUUID: jest.fn(() => 'test-uuid')
+}));
+
 jest.mock('@/lib/supabase', () => ({
   supabase: {
     from: jest.fn()
