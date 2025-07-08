@@ -138,6 +138,7 @@ L'organisateur peut inviter des participants en saisissant leurs adresses e‑ma
 ### Enregistrements MP3 (07/07/2025)
 - Les sessions audio sont désormais converties en MP3 avant l'envoi vers Supabase.
 - Les lecteurs intégrés utilisent directement ces fichiers `.mp3`.
+- L'enregistrement nécessite un navigateur supportant `navigator.mediaDevices.getUserMedia`. Sans cette API, la capture audio n'est pas disponible.
 
 ### UUID helper (08/07/2025)
 - Nouvelle fonction `generateUUID()` dans `src/lib/uuid.ts` qui utilise `crypto.randomUUID` si disponible et bascule sur une implémentation maison sinon.
