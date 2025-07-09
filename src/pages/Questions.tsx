@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/lib/supabase";
+import useRealtimeQuestions from '@/hooks/useRealtimeQuestions';
 import { logger } from "@/lib/logger";
 import type { LucideIcon } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
@@ -41,7 +42,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -65,19 +65,22 @@ interface Question {
 
 export default function Questions({ panel }: { panel?: Panel }) {
   const { user } = useUser();
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const {
+    questions,
+    status: realtimeStatus,
+    newQuestionIds
+  } = useRealtimeQuestions(panel?.id);
   const [newQuestion, setNewQuestion] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [authorStructure, setAuthorStructure] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(true);
   const [selectedPanelistEmail, setSelectedPanelistEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'recent' | 'answered' | 'unanswered'>('recent');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'answered' | 'unanswered'>('all');
-  const [isConnected, setIsConnected] = useState(false);
-  const [newQuestionCount, setNewQuestionCount] = useState(0);
+  const isConnected = realtimeStatus === 'SUBSCRIBED';
+  const newQuestionCount = newQuestionIds.size;
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const questionsEndRef = useRef<HTMLDivElement>(null);
@@ -99,144 +102,15 @@ export default function Questions({ panel }: { panel?: Panel }) {
       setIsLoading(false);
       return;
     }
-
-    const fetchQuestions = async () => {
-      try {
-        setIsLoading(true);
-        logger.debug('Fetching questions for panel:', panel.id);
-        
-        const { data, error } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('panel_id', panel.id)
-          .order('created_at', { ascending: false });
-
-        logger.debug('Questions response:', { data, error });
-
-        if (error) throw error;
-
-        const questions = data || [];
-        setQuestions(questions);
-        setIsConnected(true);
-
-      } catch (error) {
-        console.error('Error:', error);
-        toast.error(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-        setIsConnected(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchQuestions();
-
-    const questionsChannel = supabase
-      .channel(`panel-${panel.id}-questions`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panel.id}`
-        },
-        (payload) => {
-          logger.debug('Full payload received:', payload);
-          if (payload.new?.panel_id !== panel.id) {
-            logger.debug('Ignoring question from different panel');
-            return;
-          }
-          
-          const newQuestion: Question = {
-            id: payload.new.id,
-            content: payload.new.content,
-            panel_id: payload.new.panel_id,
-            panelist_email: payload.new.panelist_email || null,
-            panelist_name: payload.new.panelist_name || null,
-            author_name: payload.new.author_name || null,
-            author_structure: payload.new.author_structure || null,
-            is_anonymous: payload.new.is_anonymous,
-            is_answered: payload.new.is_answered,
-            created_at: payload.new.created_at
-          };
-
-          logger.debug('Processed new question:', newQuestion);
-          setQuestions(prev => {
-            const updated = [newQuestion, ...prev];
-            logger.debug('Questions state after update:', updated);
-            return updated;
-          });
-          setNewQuestionCount(prev => {
-            const newCount = prev + 1;
-            logger.debug('New question count:', newCount);
-            return newCount;
-          });
-          toast.success('Nouvelle question reçue! 🎉', {
-            duration: 3000,
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panel.id}`
-        },
-        (payload) => {
-          logger.debug('Question updated:', payload.new);
-          setQuestions(prev => prev.map(q =>
-            q.id === payload.new.id ? payload.new as Question : q
-          ));
-          
-          if (payload.new.is_answered && !payload.old.is_answered) {
-            toast.success('Une question a été répondue! ✅');
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panel.id}`
-        },
-        (payload) => {
-          logger.debug('Question deleted:', payload.old);
-          setQuestions(prev => prev.filter(q => q.id !== payload.old.id));
-          toast.error('Une question a été supprimée');
-        }
-      )
-      .subscribe((status) => {
-        logger.debug('Questions subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          setIsConnected(true);
-          toast.success('Connexion en temps réel établie! ⚡');
-        } else if (status === 'CHANNEL_ERROR') {
-          setIsConnected(false);
-          toast.error('Erreur de connexion temps réel');
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(questionsChannel);
-    };
-  }, [panel?.id, user?.id]);
+    if (realtimeStatus === 'SUBSCRIBED' || realtimeStatus === 'CHANNEL_ERROR') {
+      setIsLoading(false);
+    }
+  }, [panel?.id, realtimeStatus]);
 
   const scrollToBottom = () => {
     questionsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    if (newQuestionCount > 0) {
-      const timer = setTimeout(() => {
-        setNewQuestionCount(0);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [newQuestionCount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,10 +128,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
       return;
     }
 
-    if (
-      !isAnonymous &&
-      (!authorName.trim() || !authorStructure.trim())
-    ) {
+    if (!authorName.trim() || !authorStructure.trim()) {
       toast.error('Veuillez renseigner votre nom et votre structure');
       return;
     }
@@ -273,7 +144,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
       logger.debug('Submitting question to Supabase:', {
         content: newQuestion.trim(),
         panel_id: panel.id,
-        is_anonymous: true,
+        is_anonymous: false,
         length: newQuestion.length
       });
 
@@ -283,16 +154,16 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
       const { data, error } = await supabase
         .from('questions')
-        .insert({
-          content: newQuestion.trim(),
-          panel_id: panel.id,
-          is_anonymous: isAnonymous,
-          is_answered: false,
-          panelist_email: selectedPanelistEmail || null,
-          panelist_name: panelistName,
-          author_name: isAnonymous ? null : authorName.trim(),
-          author_structure: isAnonymous ? null : authorStructure.trim()
-        })
+          .insert({
+            content: newQuestion.trim(),
+            panel_id: panel.id,
+            is_anonymous: false,
+            is_answered: false,
+            panelist_email: selectedPanelistEmail || null,
+            panelist_name: panelistName,
+            author_name: authorName.trim(),
+            author_structure: authorStructure.trim()
+          })
         .select()
         .single();
 
@@ -667,43 +538,28 @@ export default function Questions({ panel }: { panel?: Panel }) {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Switch
-                      id="anonymous"
-                      checked={isAnonymous}
-                      onCheckedChange={setIsAnonymous}
-                    />
-                    <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                      {isAnonymous ? <UserX className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                      Poser anonymement
+                  <div>
+                    <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Votre nom
                     </Label>
+                    <Input
+                      type="text"
+                      value={authorName}
+                      onChange={(e) => setAuthorName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
+                    />
                   </div>
-                  {!isAnonymous && (
-                    <>
-                      <div>
-                        <Label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Votre nom
-                        </Label>
-                        <Input
-                          type="text"
-                          value={authorName}
-                          onChange={(e) => setAuthorName(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
-                        />
-                      </div>
-                      <div>
-                        <Label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Votre structure
-                        </Label>
-                        <Input
-                          type="text"
-                          value={authorStructure}
-                          onChange={(e) => setAuthorStructure(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
-                        />
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Votre structure
+                    </Label>
+                    <Input
+                      type="text"
+                      value={authorStructure}
+                      onChange={(e) => setAuthorStructure(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
+                    />
+                  </div>
 
                   <button
                     type="submit"
@@ -725,5 +581,4 @@ export default function Questions({ panel }: { panel?: Panel }) {
         </div>
       </div>
     </div>
-  );
-}
+  );}

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { debounce } from 'lodash';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from "@tanstack/react-query";
+import useRealtimeQuestions from '@/hooks/useRealtimeQuestions';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from "@/lib/supabase"
 import { logger } from "@/lib/logger"
@@ -82,7 +81,11 @@ export default function UserPanelQuestions() {
   const { user } = useUser();
   
   // TOUS les useState doivent être au début, avant tout autre hook
-  const [realtimeStatus, setRealtimeStatus] = useState<string>('disconnected');
+  const {
+    questions,
+    status: realtimeStatus
+  } = useRealtimeQuestions(panelId ?? undefined);
+  const [isLoading, setIsLoading] = useState(true);
   const [panelTitle, setPanelTitle] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'answered' | 'unanswered'>('all');
@@ -99,51 +102,11 @@ export default function UserPanelQuestions() {
     user && (user.id === panelOwnerId || user.email === moderatorEmail)
   );
 
-  // useQuery doit être appelé de manière inconditionnelle
-  const [questions, setQuestions] = useState<Question[]>([]);
-  
-  const { data: questionsData = [], isLoading, error, refetch } = useQuery<Question[]>({
-    queryKey: ['panel-questions', panelId],
-    queryFn: async () => {
-      if (!panelId) return [];
-      
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*, responses(content, created_at)')
-        .eq('panel_id', panelId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!panelId,
-    refetchOnWindowFocus: false
-  });
-
   useEffect(() => {
-    console.log('Initial data loaded or updated:', questionsData.length, 'questions');
-    setQuestions(questionsData);
-  }, [questionsData]);
-
-  useEffect(() => {
-    console.log('Current questions state:', questions.length, 'questions');
-    // Vérifier la cohérence entre questionsData et questions
-    if (JSON.stringify(questions) !== JSON.stringify(questionsData)) {
-      console.warn('Inconsistency detected between local state and query data');
+    if (realtimeStatus === 'SUBSCRIBED' || realtimeStatus === 'CHANNEL_ERROR') {
+      setIsLoading(false);
     }
-  }, [questions, questionsData]);
-
-  // Debounce pour les mises à jour temps réel
-  const debouncedSetQuestions = useCallback(
-    debounce((newQuestions: Question[]) => {
-      setQuestions(newQuestions);
-    }, 300),
-    []
-  );
-
-  useEffect(() => {
-    return () => debouncedSetQuestions.cancel();
-  }, [debouncedSetQuestions]);
+  }, [realtimeStatus]);
 
   // TOUS les useEffect doivent être appelés de manière inconditionnelle
   // useEffect pour les logs de debug
@@ -189,96 +152,6 @@ export default function UserPanelQuestions() {
     fetchPanelData();
   }, [panelId]);
 
-  // useEffect pour realtime subscription
-  const [newQuestionIds, setNewQuestionIds] = useState<Set<string>>(new Set());
-  const [updatedQuestionIds, setUpdatedQuestionIds] = useState<Set<string>>(new Set());
-  const [activityFlash, setActivityFlash] = useState(false);
-
-  const triggerActivityFlash = useCallback(() => {
-    setActivityFlash(true);
-    setTimeout(() => setActivityFlash(false), 2000);
-  }, []);
-
-  useEffect(() => {
-    if (!panelId) return;
-
-    const channel = supabase
-      .channel(`panel-${panelId}-questions-enhanced`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panelId}`
-        },
-        (payload) => {
-          const newQuestion = payload.new as Question;
-          console.log('🆕 Nouvelle question reçue:', newQuestion);
-          
-          setQuestions((prev) => [newQuestion, ...prev]);
-          setNewQuestionIds(prev => new Set([...prev, newQuestion.id]));
-          triggerActivityFlash();
-          
-          setTimeout(() => {
-            setNewQuestionIds(prev => {
-              const updated = new Set(prev);
-              updated.delete(newQuestion.id);
-              return updated;
-            });
-          }, 10000);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panelId}`
-        },
-        (payload) => {
-          const updatedQuestion = payload.new as Question;
-          console.log('🔄 Question mise à jour:', updatedQuestion);
-          
-          setQuestions((prev) =>
-            prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
-          );
-          
-          setUpdatedQuestionIds(prev => new Set([...prev, updatedQuestion.id]));
-          
-          setTimeout(() => {
-            setUpdatedQuestionIds(prev => {
-              const updated = new Set(prev);
-              updated.delete(updatedQuestion.id);
-              return updated;
-            });
-          }, 5000);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panelId}`
-        },
-        (payload) => {
-          console.log('🗑️ Question supprimée:', payload.old);
-          setQuestions((prev) => prev.filter(q => q.id !== payload.old.id));
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Statut de connexion:', status);
-        setRealtimeStatus(status);
-      });
-
-    return () => {
-      console.log('🔌 Nettoyage de la connexion temps réel');
-      supabase.removeChannel(channel);
-    };
-  }, [panelId, triggerActivityFlash]);
 
   // useEffect pour logs admin (doit être appelé inconditionnellement)
   useEffect(() => {
@@ -295,8 +168,7 @@ export default function UserPanelQuestions() {
         .update({ is_answered: !q.is_answered })
         .eq('id', q.id);
       
-      if (error) throw error;
-      refetch();
+        if (error) throw error;
     } catch (err) {
       logger.error('Failed to update question', err);
     }
@@ -705,7 +577,7 @@ export default function UserPanelQuestions() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualiser
           </Button>

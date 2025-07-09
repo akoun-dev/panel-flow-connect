@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { PanelService } from '@/services/panelService';
 import { supabase } from '@/lib/supabase';
+import useRealtimeQuestions from '@/hooks/useRealtimeQuestions';
 import type { Panel } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,8 +49,13 @@ interface RealtimeStats {
 export default function Projection() {
   const { panelId } = useParams<{ panelId: string}>();
   const [panel, setPanel] = useState<Panel | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const {
+    questions,
+    status: realtimeStatus,
+    newQuestionIds,
+    updatedQuestionIds
+  } = useRealtimeQuestions(panelId);
+  const isConnected = realtimeStatus === 'SUBSCRIBED';
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
@@ -57,15 +63,10 @@ export default function Projection() {
     responsesCount: 0,
     lastActivity: null
   });
-  
-  const [newQuestionIds, setNewQuestionIds] = useState<Set<string>>(new Set());
-  const [updatedQuestionIds, setUpdatedQuestionIds] = useState<Set<string>>(new Set());
   const [connectionPulse, setConnectionPulse] = useState(false);
   const [activityFlash, setActivityFlash] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
   const playNotificationSound = useCallback(() => {
@@ -125,176 +126,31 @@ export default function Projection() {
   }, [panelId]);
 
   useEffect(() => {
-    if (!panelId || isPaused) return;
+    if (!panelId) return;
+    const responsesCount = questions.reduce((sum, q) => sum + (q.responses?.length || 0), 0);
+    setRealtimeStats(prev => ({
+      ...prev,
+      questionsCount: questions.length,
+      responsesCount,
+      lastActivity: questions.length > 0 ? new Date(questions[0].created_at) : prev.lastActivity
+    }));
+  }, [questions, panelId]);
 
-    const fetchQuestions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('questions')
-          .select('id, content, created_at, author_name, responses(content)')
-          .eq('panel_id', panelId)
-          .order('created_at', { ascending: false });
-        
-        if (!error && data) {
-          const questionsData = data as unknown as Question[];
-          setQuestions(questionsData);
-          
-          const responsesCount = questionsData.reduce((sum, q) => sum + (q.responses?.length || 0), 0);
-          setRealtimeStats(prev => ({
-            ...prev,
-            questionsCount: questionsData.length,
-            responsesCount,
-            lastActivity: questionsData.length > 0 ? new Date(questionsData[0].created_at) : null
-          }));
-        }
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-      }
-    };
+  useEffect(() => {
+    if (newQuestionIds.size > 0 || updatedQuestionIds.size > 0) {
+      triggerActivityFlash();
+    }
+  }, [newQuestionIds, updatedQuestionIds, triggerActivityFlash]);
 
-    fetchQuestions();
-
-    const channel = supabase
-      .channel(`panel-${panelId}-projection-enhanced`)
-      .on(
-        'postgres_changes',
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'questions', 
-          filter: `panel_id=eq.${panelId}` 
-        },
-        (payload) => {
-          if (isPaused) return;
-          
-          const newQuestion = payload.new as Question;
-          console.log('🆕 Nouvelle question reçue:', newQuestion);
-          
-          setQuestions((prev) => [newQuestion, ...prev]);
-          setNewQuestionIds(prev => new Set([...prev, newQuestion.id]));
-          
-          setRealtimeStats(prev => ({
-            ...prev,
-            questionsCount: prev.questionsCount + 1,
-            lastActivity: new Date()
-          }));
-          
-          triggerActivityFlash();
-          
-          addTimeout(() => {
-            setNewQuestionIds(prev => {
-              const updated = new Set(prev);
-              updated.delete(newQuestion.id);
-              return updated;
-            });
-          }, 10000);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'questions', 
-          filter: `panel_id=eq.${panelId}` 
-        },
-        (payload) => {
-          if (isPaused) return;
-          
-          const updatedQuestion = payload.new as Question;
-          console.log('🔄 Question mise à jour:', updatedQuestion);
-          
-          setQuestions((prev) => 
-            prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
-          );
-          
-          setUpdatedQuestionIds(prev => new Set([...prev, updatedQuestion.id]));
-          setRealtimeStats(prev => ({ ...prev, lastActivity: new Date() }));
-          
-          addTimeout(() => {
-            setUpdatedQuestionIds(prev => {
-              const updated = new Set(prev);
-              updated.delete(updatedQuestion.id);
-              return updated;
-            });
-          }, 5000);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { 
-          event: 'DELETE', 
-          schema: 'public', 
-          table: 'questions', 
-          filter: `panel_id=eq.${panelId}` 
-        },
-        (payload) => {
-          if (isPaused) return;
-          
-          console.log('🗑️ Question supprimée:', payload.old);
-          setQuestions((prev) => prev.filter(q => q.id !== payload.old.id));
-          setRealtimeStats(prev => ({
-            ...prev,
-            questionsCount: Math.max(0, prev.questionsCount - 1),
-            lastActivity: new Date()
-          }));
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'responses',
-          filter: `panel_id=eq.${panelId}`
-        },
-        (payload) => {
-          if (isPaused) return;
-          
-          console.log('💬 Réponse mise à jour:', payload);
-          setQuestions(prev => {
-            const updated = [...prev];
-            const response = payload.new as { question_id: string, content: string };
-            const questionIndex = updated.findIndex(q => q.id === response.question_id);
-            if (questionIndex >= 0) {
-              const question = {...updated[questionIndex]};
-              question.responses = question.responses || [];
-              question.responses.push({ content: response.content });
-              updated[questionIndex] = question;
-              console.log('🔄 Question mise à jour avec nouvelle réponse:', question);
-            }
-            return updated;
-          });
-          triggerActivityFlash();
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Statut de connexion:', status);
-        setIsConnected(status === 'SUBSCRIBED');
-        
-        if (status === 'SUBSCRIBED') {
-          triggerConnectionPulse();
-        }
-      });
-
-    channelRef.current = channel;
-
-    return () => {
-      console.log('🔌 Nettoyage de la connexion temps réel');
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-      clearAllTimeouts();
-    };
-  }, [panelId, isPaused, addTimeout, triggerActivityFlash, triggerConnectionPulse, clearAllTimeouts]);
+  useEffect(() => {
+    if (realtimeStatus === 'SUBSCRIBED') {
+      triggerConnectionPulse();
+    }
+  }, [realtimeStatus, triggerConnectionPulse]);
 
   useEffect(() => {
     return () => {
       clearAllTimeouts();
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
     };
   }, [clearAllTimeouts]);
 
