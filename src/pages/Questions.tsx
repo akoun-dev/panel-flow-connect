@@ -27,7 +27,12 @@ import {
   Activity,
   Sparkles,
   ArrowDown,
-  RefreshCw
+  RefreshCw,
+  Plus,
+  Zap,
+  TrendingUp,
+  Users,
+  Hash
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -45,7 +50,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Interface basée EXACTEMENT sur votre schéma
 interface Question {
   id: string;
   content: string;
@@ -88,7 +92,6 @@ export default function Questions({ panel }: { panel?: Panel }) {
     }
   }, [panel, selectedPanelistEmail]);
 
-  // Charger les questions initiales et configurer REALTIME
   useEffect(() => {
     if (!panel?.id) {
       setHasError(true);
@@ -102,7 +105,6 @@ export default function Questions({ panel }: { panel?: Panel }) {
         setIsLoading(true);
         logger.debug('Fetching questions for panel:', panel.id);
         
-        // Initial fetch
         const { data, error } = await supabase
           .from('questions')
           .select('*')
@@ -119,7 +121,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
       } catch (error) {
         console.error('Error:', error);
-        toast.error(`Erreur: ${error.message}`);
+        toast.error(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
         setIsConnected(false);
       } finally {
         setIsLoading(false);
@@ -128,7 +130,6 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
     fetchQuestions();
 
-    // Configuration REALTIME
     const questionsChannel = supabase
       .channel(`panel-${panel.id}-questions`)
       .on(
@@ -198,7 +199,6 @@ export default function Questions({ panel }: { panel?: Panel }) {
     };
   }, [panel?.id, user?.id]);
 
-  // Auto-scroll vers les nouvelles questions
   const scrollToBottom = () => {
     questionsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -288,7 +288,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
       toast.success('Question envoyée avec succès! 🚀');
     } catch (error) {
       console.error('Error submitting question:', error);
-      toast.error(`Erreur lors de l'envoi de la question: ${error.message}`);
+      toast.error(`Erreur lors de l'envoi de la question: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -326,7 +326,6 @@ export default function Questions({ panel }: { panel?: Panel }) {
     }
   };
 
-  // Filtrage et tri des questions
   const filteredQuestions = questions
     .filter(question => {
       const matchesSearch = question.content.toLowerCase().includes(searchTerm.toLowerCase());
@@ -368,34 +367,73 @@ export default function Questions({ panel }: { panel?: Panel }) {
 
   const stats = getQuestionStats();
 
+  const StatCard = ({ 
+    icon: Icon, 
+    value, 
+    label, 
+    color, 
+    gradient 
+  }: { 
+    icon: any; 
+    value: number; 
+    label: string; 
+    color: string;
+    gradient: string;
+  }) => (
+    <div className={`relative overflow-hidden rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group cursor-pointer`}
+         style={{ background: gradient }}>
+      <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity" 
+           style={{ background: 'radial-gradient(circle at 30% 70%, rgba(255,255,255,0.2), transparent)' }}></div>
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-2">
+          <Icon className="h-8 w-8 opacity-90" />
+          <div className="text-3xl font-bold animate-pulse">{value}</div>
+        </div>
+        <div className="text-sm opacity-90 font-medium">{label}</div>
+      </div>
+    </div>
+  );
+
   const TabButton = ({ 
     id, 
     label, 
     icon: Icon, 
-    count
+    count,
+    isActive
   }: { 
-    id: 'recent' | 'answered' | 'unanswered'; 
+    id: string; 
     label: string; 
-    icon: LucideIcon;
-    count?: number;
+    icon: any; 
+    count: number;
+    isActive: boolean;
   }) => (
-    <Button
-      variant={activeTab === id ? 'default' : 'outline'}
-      size="sm"
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 min-w-0 ${
-        activeTab === id ? 'bg-blue-600 text-white' : ''
+    <button
+      onClick={() => setActiveTab(id as any)}
+      className={`relative flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 group ${
+        isActive 
+          ? 'text-white shadow-lg transform -translate-y-0.5' 
+          : 'text-gray-600 hover:text-white hover:transform hover:-translate-y-0.5'
       }`}
+      style={{
+        background: isActive 
+          ? 'linear-gradient(135deg, #0c54a4, #046eb6)'
+          : 'rgba(255,255,255,0.8)',
+        backdropFilter: 'blur(10px)'
+      }}
     >
-      <Icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-      <span className="hidden xs:inline sm:inline">{label}</span>
-      <span className="xs:hidden sm:hidden">{label.charAt(0)}</span>
-      {count !== undefined && count > 0 && (
-        <Badge variant="secondary" className="ml-1 text-xs min-w-[20px] h-4 px-1">
+      <Icon className="h-4 w-4" />
+      <span>{label}</span>
+      {count > 0 && (
+        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+          isActive ? 'bg-white/20' : 'bg-blue-100 text-blue-800'
+        }`}>
           {count}
-        </Badge>
+        </span>
       )}
-    </Button>
+      {isActive && (
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
+      )}
+    </button>
   );
 
   const QuestionCard = ({ question, index }: { question: Question; index: number }) => {
@@ -404,505 +442,262 @@ export default function Questions({ panel }: { panel?: Panel }) {
       panel?.panelists && (panel.panelists as Panelist[]).find(p => p.email === question.panelist_email)?.name;
 
     return (
-      <Card 
-        className={`group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 ${
-          isRecent ? 'ring-2 ring-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50' : ''
-        } ${index < 3 ? 'animate-in slide-in-from-bottom duration-500' : ''}`}
-        style={{ animationDelay: `${index * 100}ms` }}
+      <div
+        className={`group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden ${
+          isRecent ? 'ring-2 ring-blue-400/50' : ''
+        }`}
+        style={{ 
+          animationDelay: `${index * 100}ms`,
+          background: isRecent 
+            ? 'linear-gradient(135deg, rgba(25,179,210,0.05), rgba(69,185,188,0.05))'
+            : 'white'
+        }}
       >
-        <CardContent className="p-3 sm:p-4 lg:p-6">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            {/* Indicateur de statut - Mobile: horizontal, Desktop: vertical */}
-            <div className="flex sm:flex-col items-center sm:items-center justify-between sm:justify-start space-x-2 sm:space-x-0 sm:space-y-2 min-w-0 sm:min-w-[60px]">
-              <div className="flex items-center gap-2 sm:flex-col sm:gap-2">
-                <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  question.is_answered 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-orange-400 text-white'
-                }`}>
-                  {question.is_answered ? (
-                    <CheckCircle2 className="h-3 w-3" />
-                  ) : (
-                    <MessageSquare className="h-3 w-3" />
-                  )}
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-xs text-gray-500 whitespace-nowrap">
-                    {new Date(question.created_at).toLocaleDateString('fr-FR', {
-                      day: '2-digit',
-                      month: 'short'
-                    })}
-                  </div>
-                  <div className="text-xs text-gray-500 whitespace-nowrap">
-                    {new Date(question.created_at).toLocaleTimeString('fr-FR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                </div>
-              </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 via-transparent to-teal-50/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        
+        <div 
+          className={`absolute left-0 top-0 w-1 h-full transition-all duration-300 ${
+            question.is_answered ? 'bg-green-500' : 'bg-blue-400'
+          } group-hover:w-2`}
+          style={{
+            background: question.is_answered 
+              ? 'linear-gradient(to bottom, #84c282, #5cbcb4)'
+              : 'linear-gradient(to bottom, #19b3d2, #45b9bc)'
+          }}
+        ></div>
 
-              {/* Menu actions - visible sur mobile */}
-              <div className="sm:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Eye className="h-4 w-4 mr-2" />
-                      Voir détails
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Reply className="h-4 w-4 mr-2" />
-                      Répondre
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => markAsAnswered(question.id, question.is_answered)}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      {question.is_answered ? 'Marquer non répondue' : 'Marquer comme répondue'}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      className="text-red-600"
-                      onClick={() => deleteQuestion(question.id)}
-                    >
-                      <Flag className="h-4 w-4 mr-2" />
-                      Supprimer
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-
-            {/* Contenu de la question */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                  {question.is_answered && (
-                    <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 text-xs">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      <span className="hidden xs:inline">Répondue</span>
-                      <span className="xs:hidden">✓</span>
-                    </Badge>
-                  )}
-                  
-                  {isRecent && (
-                    <Badge variant="default" className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      <span className="hidden xs:inline">Nouvelle</span>
-                      <span className="xs:hidden">New</span>
-                    </Badge>
-                  )}
-                  
-                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
-                    {question.is_anonymous ? (
-                      <>
-                        <UserX className="h-3 w-3" />
-                        <span className="hidden xs:inline">Anonyme</span>
-                        <span className="xs:hidden">Anon</span>
-                      </>
-                    ) : (
-                      <>
-                        <User className="h-3 w-3" />
-                        <span className="hidden xs:inline">Identifié</span>
-                        <span className="xs:hidden">ID</span>
-                      </>
-                    )}
-                  </Badge>
-                </div>
-
-                {/* Menu actions - caché sur mobile, visible sur desktop */}
-                <div className="hidden sm:block">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Voir détails
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Reply className="h-4 w-4 mr-2" />
-                        Répondre
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => markAsAnswered(question.id, question.is_answered)}
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        {question.is_answered ? 'Marquer non répondue' : 'Marquer comme répondue'}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="text-red-600"
-                        onClick={() => deleteQuestion(question.id)}
-                      >
-                        <Flag className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-
-              <p className="text-gray-800 text-sm sm:text-base leading-relaxed mb-3 break-words">
-                {question.content}
-              </p>
-
-              {panelistName && (
-                <p className="text-xs text-gray-500 mb-2">Pour {panelistName}</p>
+        <div className="relative z-10 p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              {question.is_answered && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-white"
+                      style={{ background: 'linear-gradient(135deg, #84c282, #5cbcb4)' }}>
+                  <CheckCircle2 className="h-3 w-3" />
+                  Répondue
+                </span>
               )}
-
-              {/* {!question.is_anonymous && question.author_name && (
-                <p className="text-xs text-gray-500 mb-2">Par {question.author_name}</p>
-              )} */}
-
-              <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs sm:text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">
-                    {new Date(question.created_at).toLocaleString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
-                
-                {!question.is_answered && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => markAsAnswered(question.id, false)}
-                    className="h-6 px-2 text-xs whitespace-nowrap"
-                  >
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    <span className="hidden xs:inline">Marquer répondue</span>
-                    <span className="xs:hidden">Répondue</span>
-                  </Button>
-                )}
-              </div>
+              
+              {isRecent && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-white animate-pulse"
+                      style={{ background: 'linear-gradient(135deg, #19b3d2, #45b9bc)' }}>
+                  <Sparkles className="h-3 w-3" />
+                  Nouvelle
+                </span>
+              )}
+              
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                question.is_anonymous 
+                  ? 'bg-gray-100 text-gray-700' 
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {question.is_anonymous ? <UserX className="h-3 w-3" /> : <User className="h-3 w-3" />}
+                {question.is_anonymous ? 'Anonyme' : 'Identifié'}
+              </span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="mb-4">
+            <p className="text-gray-800 leading-relaxed text-base">{question.content}</p>
+          </div>
+
+          {panelistName && (
+            <p className="text-sm text-gray-500 mb-4">Pour {panelistName}</p>
+          )}
+        </div>
+      </div>
     );
   };
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto p-3 sm:p-6">
-        <div className="flex flex-col items-center justify-center py-12">
+      <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-600 text-sm sm:text-base text-center">Connexion en temps réel...</p>
+          <p className="text-gray-600">Connexion en temps réel...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
-      {/* Indicateur de connexion */}
-      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-xs sm:text-sm text-gray-600">
-            {isConnected ? 'Temps réel actif' : 'Connexion interrompue'}
-          </span>
-          {newQuestionCount > 0 && (
-            <Badge variant="default" className="bg-green-100 text-green-700 animate-pulse text-xs">
-              +{newQuestionCount} nouvelle(s)
-            </Badge>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {newQuestionCount > 0 && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={scrollToBottom}
-              className="animate-bounce text-xs"
-            >
-              <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Voir les nouvelles</span>
-            </Button>
-          )}
+    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header avec titre et indicateur de connexion */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className={`w-3 h-3 rounded-full animate-pulse ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-sm font-medium text-gray-600">
+              {isConnected ? 'Temps réel actif' : 'Connexion interrompue'}
+            </span>
+            {newQuestionCount > 0 && (
+              <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold animate-bounce">
+                +{newQuestionCount} nouvelle(s)
+              </span>
+            )}
+          </div>
           
-          {/* Bouton de rechargement manuel */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              setIsLoading(true);
-              window.location.reload();
-            }}
-            title="Recharger les questions"
-            className="px-2 sm:px-3"
-          >
-            <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* En-tête avec statistiques */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
-        <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3 flex-wrap">
-            <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
-            <span>Questions</span>
-            <Badge variant="outline" className="text-xs sm:text-sm">
-              <Activity className="h-3 w-3 mr-1" />
+          <h1 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-4">
+            <div className="p-3 rounded-2xl text-white"
+                 style={{ background: 'linear-gradient(135deg, #0c54a4, #046eb6)' }}>
+              <MessageSquare className="h-8 w-8" />
+            </div>
+            Questions Live
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
+                  style={{ background: 'linear-gradient(135deg, #19b3d2, #45b9bc)' }}>
+              <Zap className="h-4 w-4" />
               Live
-            </Badge>
+            </span>
           </h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base truncate">{panel?.title || 'Panel non défini'}</p>
+          
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            {panel?.title || 'Panel non défini'}
+          </p>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 sm:gap-4 w-full lg:w-auto lg:min-w-[300px]">
-          <div className="text-center">
-            <div className="text-lg sm:text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-xs text-gray-500">Total</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.answered}</div>
-            <div className="text-xs text-gray-500">Répondues</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg sm:text-2xl font-bold text-orange-600">{stats.unanswered}</div>
-            <div className="text-xs text-gray-500">En attente</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg sm:text-2xl font-bold text-purple-600">{stats.recent}</div>
-            <div className="text-xs text-gray-500">Récentes</div>
-          </div>
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            icon={Hash}
+            value={stats.total}
+            label="Total des questions"
+            color="#0c54a4"
+            gradient="linear-gradient(135deg, #0c54a4, #046eb6)"
+          />
+          <StatCard
+            icon={CheckCircle2}
+            value={stats.answered}
+            label="Questions répondues"
+            color="#84c282"
+            gradient="linear-gradient(135deg, #84c282, #5cbcb4)"
+          />
+          <StatCard
+            icon={Clock}
+            value={stats.unanswered}
+            label="En attente"
+            color="#45b9bc"
+            gradient="linear-gradient(135deg, #45b9bc, #19b3d2)"
+          />
+          <StatCard
+            icon={TrendingUp}
+            value={stats.recent}
+            label="Récentes (1h)"
+            color="#19b3d2"
+            gradient="linear-gradient(135deg, #19b3d2, #5cbcb4)"
+          />
         </div>
-      </div>
 
-      {/* Formulaire de nouvelle question */}
-      <Card className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span>Poser une question</span>
-            <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
-              <Activity className="h-3 w-3 mr-1" />
-              Temps réel
-            </Badge>
-          </CardTitle>
-          <CardDescription className="text-sm">
-            Votre question apparaîtra instantanément à tous les participants
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="question" className="text-sm sm:text-base">Votre question</Label>
-              <Textarea
-                id="question"
-                value={newQuestion}
-                onChange={(e) => setNewQuestion(e.target.value)}
-                placeholder="Posez votre question ici..."
-                className="mt-2 resize-none text-sm sm:text-base"
-                rows={3}
-                required
-              />
-              <div className="text-xs text-gray-500 mt-1">
-                {newQuestion.length}/500 caractères
-              </div>
-            </div>
-
-            {panel?.panelists && (panel.panelists as Panelist[]).length > 0 && (
+        {/* Formulaire de nouvelle question */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-teal-400/20 rounded-3xl blur-xl"></div>
+          <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50">
+            <div className="flex items-center gap-3 mb-6">
               <div>
-                <Label htmlFor="panelist" className="text-sm sm:text-base">Paneliste</Label>
-                <Select
-                  value={selectedPanelistEmail}
-                  onValueChange={setSelectedPanelistEmail}
-                >
-                  <SelectTrigger id="panelist" className="mt-2">
-                    <SelectValue placeholder="Choisir un paneliste" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(panel.panelists as Panelist[]).map((p: Panelist) => (
-                      <SelectItem key={p.email} value={p.email}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <h2 className="text-2xl font-bold text-gray-900">Poser une question</h2>
+                <p className="text-gray-600">Votre question apparaîtra instantanément à tous les participants</p>
               </div>
-            )}
+            </div>
 
-            {!isAnonymous && (
-              <>
-                <div>
-                  <Label htmlFor="authorName" className="text-sm sm:text-base">Votre nom</Label>
-                  <Input
-                    id="authorName"
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    className="mt-2"
-                    required
-                  />
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Votre question
+                    </Label>
+                    <Textarea
+                      value={newQuestion}
+                      onChange={(e) => setNewQuestion(e.target.value)}
+                      placeholder="Posez votre question ici..."
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 resize-none transition-all duration-200"
+                      rows={4}
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      {newQuestion.length}/500 caractères
+                    </div>
+                  </div>
+
+                  {panel?.panelists && (panel.panelists as Panelist[]).length > 0 && (
+                    <div>
+                      <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Panéliste destinataire
+                      </Label>
+                      <Select
+                        value={selectedPanelistEmail}
+                        onValueChange={setSelectedPanelistEmail}
+                      >
+                        <SelectTrigger className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200">
+                          <SelectValue placeholder="Choisir un paneliste" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(panel.panelists as Panelist[]).map((p: Panelist) => (
+                            <SelectItem key={p.email} value={p.email}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <Label htmlFor="authorStructure" className="text-sm sm:text-base">Votre structure</Label>
-                  <Input
-                    id="authorStructure"
-                    value={authorStructure}
-                    onChange={(e) => setAuthorStructure(e.target.value)}
-                    className="mt-2"
-                    required
-                  />
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <Switch
+                      id="anonymous"
+                      checked={isAnonymous}
+                      onCheckedChange={setIsAnonymous}
+                    />
+                    <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                      {isAnonymous ? <UserX className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                      Poser anonymement
+                    </Label>
+                  </div>
+                  {!isAnonymous && (
+                    <>
+                      <div>
+                        <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Votre nom
+                        </Label>
+                        <Input
+                          type="text"
+                          value={authorName}
+                          onChange={(e) => setAuthorName(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
+                        />
+                      </div>
+                      <div>
+                        <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Votre structure
+                        </Label>
+                        <Input
+                          type="text"
+                          value={authorStructure}
+                          onChange={(e) => setAuthorStructure(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !newQuestion.trim()}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-white font-semibold text-lg hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:scale-100"
+                    style={{ background: 'linear-gradient(135deg, #0c54a4, #046eb6)' }}
+                  >
+                    {isSubmitting ? (
+                      <RefreshCw className="animate-spin h-5 w-5" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                    {isSubmitting ? 'Envoi en cours...' : 'Envoyer la question'}
+                  </button>
                 </div>
-              </>
-            )}
-
-            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 xs:gap-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="anonymous"
-                  checked={isAnonymous}
-                  onCheckedChange={setIsAnonymous}
-                />
-                <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm cursor-pointer">
-                  {isAnonymous ? <UserX className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                  Poser anonymement
-                </Label>
               </div>
-              
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                data-testid="submit-question-btn"
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full xs:w-auto"
-              >
-                {isSubmitting ? (
-                  <RefreshCw className="animate-spin h-4 w-4" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                Envoyer
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Onglets et filtres */}
-      <Card>
-        <CardContent className="p-3 sm:p-4">
-          <div className="flex flex-col gap-3 sm:gap-4">
-            {/* Onglets */}
-            <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-1">
-              <TabButton 
-                id="recent" 
-                label="Récentes" 
-                icon={Clock}
-                count={stats.recent}
-              />
-              <TabButton 
-                id="answered" 
-                label="Répondues" 
-                icon={CheckCircle2}
-                count={stats.answered}
-              />
-              <TabButton 
-                id="unanswered" 
-                label="En attente" 
-                icon={MessageSquare}
-                count={stats.unanswered}
-              />
-            </div>
-
-            {/* Filtres */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Rechercher en temps réel..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-sm"
-                />
-              </div>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <span>Filtrer</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuItem onClick={() => setFilterStatus('all')}>
-                    Toutes les questions
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterStatus('answered')}>
-                    Questions répondues
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterStatus('unanswered')}>
-                    Questions non répondues
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            </form>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Liste des questions */}
-      <div className="space-y-3 sm:space-y-4">
-        {sortedQuestions.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8 sm:py-12 px-4">
-              <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                {searchTerm || filterStatus !== 'all' 
-                  ? 'Aucune question trouvée' 
-                  : 'Aucune question pour le moment'
-                }
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">
-                {searchTerm || filterStatus !== 'all'
-                  ? 'Essayez de modifier vos critères de recherche'
-                  : 'Soyez le premier à poser une question !'}
-              </p>
-              {!searchTerm && filterStatus === 'all' && (
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <Activity className="h-4 w-4 animate-pulse" />
-                  <span>En attente de nouvelles questions...</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {sortedQuestions.map((question, index) => (
-              <QuestionCard key={question.id} question={question} index={index} />
-            ))}
-            <div ref={questionsEndRef} />
-          </>
-        )}
-      </div>
-
-      {/* Résumé des résultats filtrés */}
-      {(searchTerm || filterStatus !== 'all') && sortedQuestions.length > 0 && (
-        <div className="text-center text-xs sm:text-sm text-gray-500 px-4">
-          {sortedQuestions.length} question(s) trouvée(s) sur {questions.length} au total
         </div>
-      )}
+      </div>
     </div>
   );
-};
+}

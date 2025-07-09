@@ -25,7 +25,9 @@ import {
   Pause,
   Play,
   Volume2,
-  VolumeX
+  VolumeX,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 
 interface Question {
@@ -33,6 +35,7 @@ interface Question {
   content: string;
   created_at: string;
   author_name?: string | null;
+  author_structure?: string | null;
   responses?: Array<{ content: string }>;
 }
 
@@ -55,7 +58,6 @@ export default function Projection() {
     lastActivity: null
   });
   
-  // États pour les animations temps réel
   const [newQuestionIds, setNewQuestionIds] = useState<Set<string>>(new Set());
   const [updatedQuestionIds, setUpdatedQuestionIds] = useState<Set<string>>(new Set());
   const [connectionPulse, setConnectionPulse] = useState(false);
@@ -63,11 +65,9 @@ export default function Projection() {
   const [isPaused, setIsPaused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   
-  // Références pour le nettoyage
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
-  // Sons de notification (optionnel)
   const playNotificationSound = useCallback(() => {
     if (!soundEnabled) return;
     try {
@@ -79,13 +79,11 @@ export default function Projection() {
     }
   }, [soundEnabled]);
 
-  // Nettoyage des timeouts
   const clearAllTimeouts = useCallback(() => {
     timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
     timeoutRefs.current.clear();
   }, []);
 
-  // Fonction pour ajouter un timeout avec nettoyage automatique
   const addTimeout = useCallback((callback: () => void, delay: number) => {
     const timeout = setTimeout(() => {
       callback();
@@ -95,20 +93,17 @@ export default function Projection() {
     return timeout;
   }, []);
 
-  // Animation de connexion
   const triggerConnectionPulse = useCallback(() => {
     setConnectionPulse(true);
     addTimeout(() => setConnectionPulse(false), 1000);
   }, [addTimeout]);
 
-  // Animation d'activité
   const triggerActivityFlash = useCallback(() => {
     setActivityFlash(true);
     playNotificationSound();
     addTimeout(() => setActivityFlash(false), 2000);
   }, [addTimeout, playNotificationSound]);
 
-  // Mise à jour de l'horloge
   useEffect(() => {
     if (isPaused) return;
     
@@ -119,7 +114,6 @@ export default function Projection() {
     return () => clearInterval(timer);
   }, [isPaused]);
 
-  // Chargement initial du panel
   useEffect(() => {
     if (!panelId) return;
     
@@ -130,12 +124,9 @@ export default function Projection() {
       .finally(() => setIsLoading(false));
   }, [panelId]);
 
-
-  // Configuration temps réel avec gestion robuste
   useEffect(() => {
     if (!panelId || isPaused) return;
 
-    // Chargement initial des questions
     const fetchQuestions = async () => {
       try {
         const { data, error } = await supabase
@@ -163,7 +154,6 @@ export default function Projection() {
 
     fetchQuestions();
 
-    // Configuration du canal temps réel
     const channel = supabase
       .channel(`panel-${panelId}-projection-enhanced`)
       .on(
@@ -183,7 +173,6 @@ export default function Projection() {
           setQuestions((prev) => [newQuestion, ...prev]);
           setNewQuestionIds(prev => new Set([...prev, newQuestion.id]));
           
-          // Mise à jour des stats
           setRealtimeStats(prev => ({
             ...prev,
             questionsCount: prev.questionsCount + 1,
@@ -192,7 +181,6 @@ export default function Projection() {
           
           triggerActivityFlash();
           
-          // Retirer l'animation après 10 secondes
           addTimeout(() => {
             setNewQuestionIds(prev => {
               const updated = new Set(prev);
@@ -223,7 +211,6 @@ export default function Projection() {
           setUpdatedQuestionIds(prev => new Set([...prev, updatedQuestion.id]));
           setRealtimeStats(prev => ({ ...prev, lastActivity: new Date() }));
           
-          // Retirer l'animation après 5 secondes
           addTimeout(() => {
             setUpdatedQuestionIds(prev => {
               const updated = new Set(prev);
@@ -265,7 +252,6 @@ export default function Projection() {
           if (isPaused) return;
           
           console.log('💬 Réponse mise à jour:', payload);
-          // Recharger les questions pour avoir les réponses à jour
           fetchQuestions();
           triggerActivityFlash();
         }
@@ -291,7 +277,6 @@ export default function Projection() {
     };
   }, [panelId, isPaused, addTimeout, triggerActivityFlash, triggerConnectionPulse, clearAllTimeouts]);
 
-  // Nettoyage lors du démontage
   useEffect(() => {
     return () => {
       clearAllTimeouts();
@@ -301,7 +286,6 @@ export default function Projection() {
     };
   }, [clearAllTimeouts]);
 
-  // Tri des questions par popularité
   const popularQuestions = [...questions].sort((a, b) => {
     const aCount = a.responses?.length || 0;
     const bCount = b.responses?.length || 0;
@@ -310,7 +294,6 @@ export default function Projection() {
 
   const topQuestions = popularQuestions.slice(0, 8);
 
-  // Fonctions utilitaires
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('fr-FR', { 
       hour: '2-digit', 
@@ -347,20 +330,19 @@ export default function Projection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-12 w-12 mx-auto text-blue-600 animate-spin mb-4" />
-          <h2 className="text-2xl font-semibold text-gray-800">Chargement de la projection...</h2>
-          <p className="text-gray-600 mt-2">Initialisation de la connexion temps réel</p>
+      <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-12">
+          <RefreshCw className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+          <p className="text-gray-600">Chargement de la projection...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
       {/* En-tête avec contrôles temps réel */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-xl border-b border-white/50 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             
@@ -368,23 +350,14 @@ export default function Projection() {
             <div className="flex items-center gap-6">
               {panel && (
                 <>
+                  <img
+                    src="/images/logoministere.png"
+                    alt="Logo Ministère"
+                    className="h-10 object-contain"
+                  />
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900">{panel.title}</h1>
                     <p className="text-gray-600 mt-1">{panel.description}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="text-base px-3 py-1 border-blue-200 text-blue-700">
-                      <Radio className="h-4 w-4 mr-1" />
-                      Live
-                    </Badge>
-                    
-                    {activityFlash && (
-                      <Badge className="bg-green-500 text-white animate-bounce">
-                        <Zap className="h-3 w-3 mr-1" />
-                        Activité !
-                      </Badge>
-                    )}
                   </div>
                 </>
               )}
@@ -393,26 +366,6 @@ export default function Projection() {
             {/* Panneau de contrôle temps réel */}
             <div className="flex items-center gap-6">
               
-              {/* Contrôles */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsPaused(!isPaused)}
-                  className={isPaused ? 'border-orange-300 text-orange-700' : ''}
-                >
-                  {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                >
-                  {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                </Button>
-              </div>
-              
               {/* Statut de connexion */}
               <div className="flex items-center gap-2">
                 <div className={`
@@ -420,11 +373,13 @@ export default function Projection() {
                   ${isPaused 
                     ? 'bg-orange-100 text-orange-700' 
                     : isConnected 
-                      ? 'bg-green-100 text-green-700' 
+                      ? 'text-white' 
                       : 'bg-red-100 text-red-700'
                   }
                   ${connectionPulse ? 'scale-110' : ''}
-                `}>
+                `}
+                style={isConnected && !isPaused ? { background: 'linear-gradient(135deg, #0c54a4, #046eb6)' } : {}}
+                >
                   {isPaused ? (
                     <Pause className="h-4 w-4" />
                   ) : isConnected ? (
@@ -433,16 +388,6 @@ export default function Projection() {
                     <WifiOff className="h-4 w-4 animate-pulse" />
                   )}
                   <span className="font-medium text-sm">{getConnectionStatusText()}</span>
-                </div>
-              </div>
-              
-              {/* Horloge et activité */}
-              <div className="text-right">
-                <div className="text-2xl font-mono font-bold text-gray-900">
-                  {formatTime(currentTime)}
-                </div>
-                <div className="text-xs text-gray-600">
-                  {getActivityStatus()}
                 </div>
               </div>
             </div>
@@ -454,48 +399,37 @@ export default function Projection() {
         
         {/* Métriques temps réel */}
         <div className="grid grid-cols-4 gap-6 mb-8">
-          <Card className={`border-0 shadow-lg transition-all ${activityFlash ? 'ring-2 ring-green-400 bg-green-50' : 'bg-white'}`}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-50 rounded-xl">
-                  <Users className="h-8 w-8 text-blue-600" />
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{panel?.panelists?.length || 0}</div>
-                  <div className="text-gray-600">Panélistes</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard 
+            icon={Users}
+            value={panel?.panelists?.length || 0}
+            label="Panélistes"
+            color="#0c54a4"
+            gradient="linear-gradient(135deg, #0c54a4, #046eb6)"
+          />
 
-          <Card className={`border-0 shadow-lg transition-all ${activityFlash ? 'ring-2 ring-green-400 bg-green-50' : 'bg-white'}`}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-50 rounded-xl">
-                  <MessageSquare className="h-8 w-8 text-green-600" />
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{realtimeStats.questionsCount}</div>
-                  <div className="text-gray-600">Questions</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard 
+            icon={MessageSquare}
+            value={realtimeStats.questionsCount}
+            label="Questions"
+            color="#45b9bc"
+            gradient="linear-gradient(135deg, #45b9bc, #19b3d2)"
+          />
 
-          <Card className={`border-0 shadow-lg transition-all ${activityFlash ? 'ring-2 ring-green-400 bg-green-50' : 'bg-white'}`}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-purple-50 rounded-xl">
-                  <Activity className="h-8 w-8 text-purple-600" />
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{realtimeStats.responsesCount}</div>
-                  <div className="text-gray-600">Interactions</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard 
+            icon={Activity}
+            value={realtimeStats.responsesCount}
+            label="Interactions"
+            color="#84c282"
+            gradient="linear-gradient(135deg, #84c282, #5cbcb4)"
+          />
 
+          <StatCard 
+            icon={TrendingUp}
+            value={Math.round((realtimeStats.questionsCount / Math.max(1, panel?.duration || 60)) * 60)}
+            label="Questions/heure"
+            color="#19b3d2"
+            gradient="linear-gradient(135deg, #19b3d2, #5cbcb4)"
+          />
         </div>
 
         <div className="grid grid-cols-12 gap-8">
@@ -506,9 +440,9 @@ export default function Projection() {
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-xl">
-                    <TrendingUp className="h-6 w-6 text-purple-600" />
+                    <TrendingUp className="h-6 w-6" style={{ color: '#19b3d2' }} />
                     Questions Populaires
-                    <Badge variant="secondary" className="text-sm">
+                    <Badge className="text-white" style={{ background: 'linear-gradient(135deg, #0c54a4, #046eb6)' }}>
                       Temps réel
                     </Badge>
                   </CardTitle>
@@ -577,13 +511,13 @@ export default function Projection() {
                               {/* Badges de statut */}
                               <div className="flex items-center gap-2 mb-3">
                                 {isNew && (
-                                  <Badge className="bg-green-500 text-white">
+                                  <Badge className="text-white" style={{ background: 'linear-gradient(135deg, #84c282, #5cbcb4)' }}>
                                     <Zap className="h-3 w-3 mr-1" />
                                     Nouveau
                                   </Badge>
                                 )}
                                 {isUpdated && (
-                                  <Badge className="bg-blue-500 text-white">
+                                  <Badge className="text-white" style={{ background: 'linear-gradient(135deg, #0c54a4, #046eb6)' }}>
                                     <RefreshCw className="h-3 w-3 mr-1" />
                                     Mis à jour
                                   </Badge>
@@ -637,17 +571,21 @@ export default function Projection() {
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-blue-600" />
+                  <Users className="h-5 w-5" style={{ color: '#0c54a4' }} />
                   Panélistes
-                  <Badge variant="secondary">{panel?.panelists?.length || 0}</Badge>
+                  <Badge className="text-white" style={{ background: 'linear-gradient(135deg, #0c54a4, #046eb6)' }}>
+                    {panel?.panelists?.length || 0}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {panel?.panelists?.length ? (
                   <div className="space-y-3">
                     {panel.panelists.map((panelist, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
+                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg" 
+                           style={{ background: 'linear-gradient(135deg, rgba(12,84,164,0.05), rgba(4,110,182,0.05))' }}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium"
+                             style={{ background: 'linear-gradient(135deg, #0c54a4, #046eb6)' }}>
                           {panelist.name.charAt(0)}
                         </div>
                         <div>
@@ -669,7 +607,7 @@ export default function Projection() {
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-green-600" />
+                  <Activity className="h-5 w-5" style={{ color: '#19b3d2' }} />
                   Stats Live
                 </CardTitle>
               </CardHeader>
@@ -677,7 +615,7 @@ export default function Projection() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Questions/heure</span>
-                    <span className="font-bold text-green-600">
+                    <span className="font-bold" style={{ color: '#19b3d2' }}>
                       {Math.round((realtimeStats.questionsCount / Math.max(1, panel?.duration || 60)) * 60)}
                     </span>
                   </div>
@@ -723,7 +661,7 @@ export default function Projection() {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-blue-500" />
+                  <Bell className="h-4 w-4" style={{ color: '#0c54a4' }} />
                   <span className="text-sm text-gray-600">
                     Notifications {soundEnabled ? 'activées' : 'désactivées'}
                   </span>
@@ -740,3 +678,31 @@ export default function Projection() {
     </div>
   );
 }
+
+// Composant StatCard réutilisé depuis la première vue
+const StatCard = ({ 
+  icon: Icon, 
+  value, 
+  label, 
+  color, 
+  gradient 
+}: { 
+  icon: React.ComponentType<{ className?: string }>;
+  value: number; 
+  label: string; 
+  color: string;
+  gradient: string;
+}) => (
+  <div className={`relative overflow-hidden rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group cursor-pointer`}
+       style={{ background: gradient }}>
+    <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity" 
+         style={{ background: 'radial-gradient(circle at 30% 70%, rgba(255,255,255,0.2), transparent)' }}></div>
+    <div className="relative z-10">
+      <div className="flex items-center justify-between mb-2">
+        <Icon className="h-8 w-8 opacity-90" />
+        <div className="text-3xl font-bold animate-pulse">{value}</div>
+      </div>
+      <div className="text-sm opacity-90 font-medium">{label}</div>
+    </div>
+  </div>
+);

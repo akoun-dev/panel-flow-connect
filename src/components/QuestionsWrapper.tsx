@@ -39,7 +39,6 @@ export default function QuestionsWrapper() {
 
   return (
     <div className="p-4">
-      <PanelInfoHeader panel={panel} />
       <Questions panel={panel} />
     </div>
   );
