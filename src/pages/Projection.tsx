@@ -32,6 +32,7 @@ interface Question {
   id: string;
   content: string;
   created_at: string;
+  author_name?: string | null;
   responses?: Array<{ content: string }>;
 }
 
@@ -139,7 +140,7 @@ export default function Projection() {
       try {
         const { data, error } = await supabase
           .from('questions')
-          .select('id, content, created_at, responses(content)')
+          .select('id, content, created_at, author_name, responses(content)')
           .eq('panel_id', panelId)
           .order('created_at', { ascending: false });
         
@@ -594,9 +595,12 @@ export default function Projection() {
                                 )}
                               </div>
                               
-                              <p className="text-lg font-medium text-gray-900 leading-relaxed mb-4">
+                              <p className="text-lg font-medium text-gray-900 leading-relaxed">
                                 {question.content}
                               </p>
+                              {question.author_name && (
+                                <p className="text-sm text-gray-500 mb-4">par {question.author_name}</p>
+                              )}
                               
                               <div className="flex items-center gap-6 text-sm text-gray-600">
                                 <div className="flex items-center gap-1">
@@ -660,7 +664,6 @@ export default function Projection() {
                 )}
               </CardContent>
             </Card>
-
 
             {/* Statistiques temps réel */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
