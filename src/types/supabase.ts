@@ -147,6 +147,7 @@ export type Database = {
           panelist_email: string | null
           panelist_name: string | null
           author_name: string | null
+          author_structure: Json | null
         }
         Insert: {
           id?: string
@@ -158,6 +159,7 @@ export type Database = {
           panelist_email?: string | null
           panelist_name?: string | null
           author_name?: string | null
+          author_structure?: Json | null
         }
         Update: {
           id?: string
@@ -169,6 +171,7 @@ export type Database = {
           panelist_email?: string | null
           panelist_name?: string | null
           author_name?: string | null
+          author_structure?: Json | null
         }
         Relationships: [
           {
