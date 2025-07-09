@@ -2,19 +2,17 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { PanelService } from '@/services/panelService';
 import { supabase } from '@/lib/supabase';
-import type { Panel, Poll } from '@/types';
+import type { Panel } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { 
   MessageSquare, 
   Users, 
   TrendingUp, 
   Wifi, 
-  WifiOff, 
-  Clock, 
-  BarChart3,
+  WifiOff,
+  Clock,
   Zap,
   ThumbsUp,
   Hash,
@@ -41,14 +39,12 @@ interface Question {
 interface RealtimeStats {
   questionsCount: number;
   responsesCount: number;
-  pollsCount: number;
   lastActivity: Date | null;
 }
 
 export default function Projection() {
   const { panelId } = useParams<{ panelId: string}>();
   const [panel, setPanel] = useState<Panel | null>(null);
-  const [polls, setPolls] = useState<Poll[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +52,6 @@ export default function Projection() {
   const [realtimeStats, setRealtimeStats] = useState<RealtimeStats>({
     questionsCount: 0,
     responsesCount: 0,
-    pollsCount: 0,
     lastActivity: null
   });
   
@@ -135,29 +130,6 @@ export default function Projection() {
       .finally(() => setIsLoading(false));
   }, [panelId]);
 
-  // Chargement initial des sondages
-  useEffect(() => {
-    if (!panelId) return;
-    
-    const fetchPolls = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('polls')
-          .select('id, panel_id, question, created_at')
-          .eq('panel_id', panelId)
-          .order('created_at', { ascending: false });
-        
-        if (!error && data) {
-          setPolls(data as Poll[]);
-          setRealtimeStats(prev => ({ ...prev, pollsCount: data.length }));
-        }
-      } catch (error) {
-        console.error('Error fetching polls:', error);
-      }
-    };
-    
-    fetchPolls();
-  }, [panelId]);
 
   // Configuration temps réel avec gestion robuste
   useEffect(() => {
@@ -337,9 +309,6 @@ export default function Projection() {
   });
 
   const topQuestions = popularQuestions.slice(0, 8);
-  const recentQuestions = [...questions]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 6);
 
   // Fonctions utilitaires
   const formatTime = (date: Date) => {
@@ -527,19 +496,6 @@ export default function Projection() {
             </CardContent>
           </Card>
 
-          <Card className={`border-0 shadow-lg transition-all ${activityFlash ? 'ring-2 ring-green-400 bg-green-50' : 'bg-white'}`}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-orange-50 rounded-xl">
-                  <BarChart3 className="h-8 w-8 text-orange-600" />
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{realtimeStats.pollsCount}</div>
-                  <div className="text-gray-600">Sondages</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="grid grid-cols-12 gap-8">
@@ -704,69 +660,6 @@ export default function Projection() {
                   <div className="text-center py-6">
                     <Users className="h-8 w-8 mx-auto text-gray-300 mb-2" />
                     <p className="text-gray-500 text-sm">Aucun panéliste</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Activité récente */}
-            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                  Activité Récente
-                  <div className={`w-2 h-2 rounded-full ml-auto ${
-                    realtimeStats.lastActivity && 
-                    new Date().getTime() - realtimeStats.lastActivity.getTime() < 60000
-                      ? 'bg-green-400 animate-pulse' 
-                      : 'bg-gray-300'
-                  }`} />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {recentQuestions.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Bell className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                    <p className="text-gray-500 text-sm">Aucune activité récente</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentQuestions.map((question) => {
-                      const isNew = newQuestionIds.has(question.id);
-                      const isUpdated = updatedQuestionIds.has(question.id);
-                      
-                      return (
-                        <div
-                          key={question.id}
-                          className={`
-                            p-3 rounded-lg border transition-all duration-300
-                            ${isNew 
-                              ? 'border-green-200 bg-green-50 shadow-md' 
-                              : isUpdated
-                              ? 'border-blue-200 bg-blue-50'
-                              : 'border-gray-200 bg-gray-50'
-                            }
-                          `}
-                        >
-                          <p className="text-sm text-gray-900 line-clamp-2">
-                            {question.content}
-                          </p>
-                          {question.author_name && (
-                            <p className="text-xs text-gray-500 mb-2">par {question.author_name}</p>
-                          )}
-                          <div className="flex items-center justify-between text-xs text-gray-600">
-                            <span>{getQuestionAge(question.created_at)}</span>
-                            <div className="flex items-center gap-1">
-                              <Hash className="h-3 w-3" />
-                              <span>{question.responses?.length || 0}</span>
-                              {(isNew || isUpdated) && (
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse ml-1" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
                 )}
               </CardContent>
