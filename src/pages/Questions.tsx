@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { logger } from "@/lib/logger";
 import type { LucideIcon } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
+import { useRealtimeQuestions } from '@/hooks/useRealtimeQuestions';
 import { Panel, Panelist } from '../types';
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -65,21 +66,24 @@ interface Question {
 
 export default function Questions({ panel }: { panel?: Panel }) {
   const { user } = useUser();
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const {
+    questions,
+    status,
+    loading: isLoading,
+    newQuestionIds,
+    refresh
+  } = useRealtimeQuestions(panel?.id);
+  const isConnected = status === 'SUBSCRIBED';
+  const newQuestionCount = newQuestionIds.size;
   const [newQuestion, setNewQuestion] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [authorStructure, setAuthorStructure] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [selectedPanelistEmail, setSelectedPanelistEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'recent' | 'answered' | 'unanswered'>('recent');
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'answered' | 'unanswered'>('all');
-  const [isConnected, setIsConnected] = useState(false);
-  const [newQuestionCount, setNewQuestionCount] = useState(0);
-  const [hasError, setHasError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const questionsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -92,151 +96,10 @@ export default function Questions({ panel }: { panel?: Panel }) {
     }
   }, [panel, selectedPanelistEmail]);
 
-  useEffect(() => {
-    if (!panel?.id) {
-      setHasError(true);
-      setErrorMessage('Panel ID not found');
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchQuestions = async () => {
-      try {
-        setIsLoading(true);
-        logger.debug('Fetching questions for panel:', panel.id);
-        
-        const { data, error } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('panel_id', panel.id)
-          .order('created_at', { ascending: false });
-
-        logger.debug('Questions response:', { data, error });
-
-        if (error) throw error;
-
-        const questions = data || [];
-        setQuestions(questions);
-        setIsConnected(true);
-
-      } catch (error) {
-        console.error('Error:', error);
-        toast.error(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-        setIsConnected(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchQuestions();
-
-    const questionsChannel = supabase
-      .channel(`panel-${panel.id}-questions`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panel.id}`
-        },
-        (payload) => {
-          logger.debug('Full payload received:', payload);
-          if (payload.new?.panel_id !== panel.id) {
-            logger.debug('Ignoring question from different panel');
-            return;
-          }
-          
-          const newQuestion: Question = {
-            id: payload.new.id,
-            content: payload.new.content,
-            panel_id: payload.new.panel_id,
-            panelist_email: payload.new.panelist_email || null,
-            panelist_name: payload.new.panelist_name || null,
-            author_name: payload.new.author_name || null,
-            author_structure: payload.new.author_structure || null,
-            is_anonymous: payload.new.is_anonymous,
-            is_answered: payload.new.is_answered,
-            created_at: payload.new.created_at
-          };
-
-          logger.debug('Processed new question:', newQuestion);
-          setQuestions(prev => {
-            const updated = [newQuestion, ...prev];
-            logger.debug('Questions state after update:', updated);
-            return updated;
-          });
-          setNewQuestionCount(prev => {
-            const newCount = prev + 1;
-            logger.debug('New question count:', newCount);
-            return newCount;
-          });
-          toast.success('Nouvelle question reçue! 🎉', {
-            duration: 3000,
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panel.id}`
-        },
-        (payload) => {
-          logger.debug('Question updated:', payload.new);
-          setQuestions(prev => prev.map(q =>
-            q.id === payload.new.id ? payload.new as Question : q
-          ));
-          
-          if (payload.new.is_answered && !payload.old.is_answered) {
-            toast.success('Une question a été répondue! ✅');
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'questions',
-          filter: `panel_id=eq.${panel.id}`
-        },
-        (payload) => {
-          logger.debug('Question deleted:', payload.old);
-          setQuestions(prev => prev.filter(q => q.id !== payload.old.id));
-          toast.error('Une question a été supprimée');
-        }
-      )
-      .subscribe((status) => {
-        logger.debug('Questions subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          setIsConnected(true);
-          toast.success('Connexion en temps réel établie! ⚡');
-        } else if (status === 'CHANNEL_ERROR') {
-          setIsConnected(false);
-          toast.error('Erreur de connexion temps réel');
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(questionsChannel);
-    };
-  }, [panel?.id, user?.id]);
-
   const scrollToBottom = () => {
     questionsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    if (newQuestionCount > 0) {
-      const timer = setTimeout(() => {
-        setNewQuestionCount(0);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [newQuestionCount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -555,9 +418,9 @@ export default function Questions({ panel }: { panel?: Panel }) {
             <span className="text-sm font-medium text-gray-600">
               {isConnected ? 'Temps réel actif' : 'Connexion interrompue'}
             </span>
-            {newQuestionCount > 0 && (
+            {newQuestionIds.size > 0 && (
               <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold animate-bounce">
-                +{newQuestionCount} nouvelle(s)
+                +{newQuestionIds.size} nouvelle(s)
               </span>
             )}
           </div>
