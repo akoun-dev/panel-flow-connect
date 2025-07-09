@@ -252,7 +252,19 @@ export default function Projection() {
           if (isPaused) return;
           
           console.log('💬 Réponse mise à jour:', payload);
-          fetchQuestions();
+          setQuestions(prev => {
+            const updated = [...prev];
+            const response = payload.new as { question_id: string, content: string };
+            const questionIndex = updated.findIndex(q => q.id === response.question_id);
+            if (questionIndex >= 0) {
+              const question = {...updated[questionIndex]};
+              question.responses = question.responses || [];
+              question.responses.push({ content: response.content });
+              updated[questionIndex] = question;
+              console.log('🔄 Question mise à jour avec nouvelle réponse:', question);
+            }
+            return updated;
+          });
           triggerActivityFlash();
         }
       )
@@ -286,13 +298,23 @@ export default function Projection() {
     };
   }, [clearAllTimeouts]);
 
-  const popularQuestions = [...questions].sort((a, b) => {
-    const aCount = a.responses?.length || 0;
-    const bCount = b.responses?.length || 0;
-    return bCount - aCount;
-  });
+  const [topQuestions, setTopQuestions] = useState<Question[]>([]);
 
-  const topQuestions = popularQuestions.slice(0, 8);
+  useEffect(() => {
+    console.log('🔄 Recalcul des questions populaires');
+    const popularQuestions = [...questions].sort((a, b) => {
+      const aCount = a.responses?.length || 0;
+      const bCount = b.responses?.length || 0;
+      return bCount - aCount;
+    });
+    const newTopQuestions = popularQuestions.slice(0, 8);
+    console.log('🏆 Nouvelles questions populaires:', newTopQuestions.map(q => ({
+      id: q.id,
+      content: q.content.substring(0, 20) + '...',
+      responses: q.responses?.length
+    })));
+    setTopQuestions(newTopQuestions);
+  }, [questions]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('fr-FR', { 

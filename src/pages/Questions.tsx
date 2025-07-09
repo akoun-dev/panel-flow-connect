@@ -141,10 +141,36 @@ export default function Questions({ panel }: { panel?: Panel }) {
           filter: `panel_id=eq.${panel.id}`
         },
         (payload) => {
-          logger.debug('New question:', payload.new);
-          const newQuestion = payload.new as Question;
-          setQuestions(prev => [newQuestion, ...prev]);
-          setNewQuestionCount(prev => prev + 1);
+          logger.debug('Full payload received:', payload);
+          if (payload.new?.panel_id !== panel.id) {
+            logger.debug('Ignoring question from different panel');
+            return;
+          }
+          
+          const newQuestion: Question = {
+            id: payload.new.id,
+            content: payload.new.content,
+            panel_id: payload.new.panel_id,
+            panelist_email: payload.new.panelist_email || null,
+            panelist_name: payload.new.panelist_name || null,
+            author_name: payload.new.author_name || null,
+            author_structure: payload.new.author_structure || null,
+            is_anonymous: payload.new.is_anonymous,
+            is_answered: payload.new.is_answered,
+            created_at: payload.new.created_at
+          };
+
+          logger.debug('Processed new question:', newQuestion);
+          setQuestions(prev => {
+            const updated = [newQuestion, ...prev];
+            logger.debug('Questions state after update:', updated);
+            return updated;
+          });
+          setNewQuestionCount(prev => {
+            const newCount = prev + 1;
+            logger.debug('New question count:', newCount);
+            return newCount;
+          });
           toast.success('Nouvelle question reçue! 🎉', {
             duration: 3000,
           });

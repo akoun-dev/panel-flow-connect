@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'; // Supprimé useDebugValue inutilisé
+import { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from 'react-router-dom';
@@ -99,7 +100,9 @@ export default function UserPanelQuestions() {
   );
 
   // useQuery doit être appelé de manière inconditionnelle
-  const { data: questions = [], isLoading, error, refetch } = useQuery<Question[]>({
+  const [questions, setQuestions] = useState<Question[]>([]);
+  
+  const { data: questionsData = [], isLoading, error, refetch } = useQuery<Question[]>({
     queryKey: ['panel-questions', panelId],
     queryFn: async () => {
       if (!panelId) return [];
@@ -116,6 +119,31 @@ export default function UserPanelQuestions() {
     enabled: !!panelId,
     refetchOnWindowFocus: false
   });
+
+  useEffect(() => {
+    console.log('Initial data loaded or updated:', questionsData.length, 'questions');
+    setQuestions(questionsData);
+  }, [questionsData]);
+
+  useEffect(() => {
+    console.log('Current questions state:', questions.length, 'questions');
+    // Vérifier la cohérence entre questionsData et questions
+    if (JSON.stringify(questions) !== JSON.stringify(questionsData)) {
+      console.warn('Inconsistency detected between local state and query data');
+    }
+  }, [questions, questionsData]);
+
+  // Debounce pour les mises à jour temps réel
+  const debouncedSetQuestions = useCallback(
+    debounce((newQuestions: Question[]) => {
+      setQuestions(newQuestions);
+    }, 300),
+    []
+  );
+
+  useEffect(() => {
+    return () => debouncedSetQuestions.cancel();
+  }, [debouncedSetQuestions]);
 
   // TOUS les useEffect doivent être appelés de manière inconditionnelle
   // useEffect pour les logs de debug
@@ -162,36 +190,95 @@ export default function UserPanelQuestions() {
   }, [panelId]);
 
   // useEffect pour realtime subscription
+  const [newQuestionIds, setNewQuestionIds] = useState<Set<string>>(new Set());
+  const [updatedQuestionIds, setUpdatedQuestionIds] = useState<Set<string>>(new Set());
+  const [activityFlash, setActivityFlash] = useState(false);
+
+  const triggerActivityFlash = useCallback(() => {
+    setActivityFlash(true);
+    setTimeout(() => setActivityFlash(false), 2000);
+  }, []);
+
   useEffect(() => {
     if (!panelId) return;
 
-    const subscription = supabase
-      .channel(`questions:${panelId}`)
+    const channel = supabase
+      .channel(`panel-${panelId}-questions-enhanced`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'questions',
           filter: `panel_id=eq.${panelId}`
         },
-        () => {
-          logger.debug('Changement détecté, déclenchement re-fetch...');
-          refetch();
+        (payload) => {
+          const newQuestion = payload.new as Question;
+          console.log('🆕 Nouvelle question reçue:', newQuestion);
+          
+          setQuestions((prev) => [newQuestion, ...prev]);
+          setNewQuestionIds(prev => new Set([...prev, newQuestion.id]));
+          triggerActivityFlash();
+          
+          setTimeout(() => {
+            setNewQuestionIds(prev => {
+              const updated = new Set(prev);
+              updated.delete(newQuestion.id);
+              return updated;
+            });
+          }, 10000);
         }
       )
-      .subscribe((status, err) => {
-        logger.debug('Statut abonnement:', status);
-        setRealtimeStatus(status);
-        if (err) {
-          console.error('Erreur abonnement:', err);
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'questions',
+          filter: `panel_id=eq.${panelId}`
+        },
+        (payload) => {
+          const updatedQuestion = payload.new as Question;
+          console.log('🔄 Question mise à jour:', updatedQuestion);
+          
+          setQuestions((prev) =>
+            prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
+          );
+          
+          setUpdatedQuestionIds(prev => new Set([...prev, updatedQuestion.id]));
+          
+          setTimeout(() => {
+            setUpdatedQuestionIds(prev => {
+              const updated = new Set(prev);
+              updated.delete(updatedQuestion.id);
+              return updated;
+            });
+          }, 5000);
         }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'questions',
+          filter: `panel_id=eq.${panelId}`
+        },
+        (payload) => {
+          console.log('🗑️ Question supprimée:', payload.old);
+          setQuestions((prev) => prev.filter(q => q.id !== payload.old.id));
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Statut de connexion:', status);
+        setRealtimeStatus(status);
       });
 
     return () => {
-      supabase.removeChannel(subscription);
+      console.log('🔌 Nettoyage de la connexion temps réel');
+      supabase.removeChannel(channel);
     };
-  }, [panelId, refetch]);
+  }, [panelId, triggerActivityFlash]);
 
   // useEffect pour logs admin (doit être appelé inconditionnellement)
   useEffect(() => {
