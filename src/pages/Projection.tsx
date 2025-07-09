@@ -34,6 +34,7 @@ interface Question {
   id: string;
   content: string;
   created_at: string;
+  author_name?: string | null;
   responses?: Array<{ content: string }>;
 }
 
@@ -167,7 +168,7 @@ export default function Projection() {
       try {
         const { data, error } = await supabase
           .from('questions')
-          .select('id, content, created_at, responses(content)')
+          .select('id, content, created_at, author_name, responses(content)')
           .eq('panel_id', panelId)
           .order('created_at', { ascending: false });
         
@@ -638,9 +639,12 @@ export default function Projection() {
                                 )}
                               </div>
                               
-                              <p className="text-lg font-medium text-gray-900 leading-relaxed mb-4">
+                              <p className="text-lg font-medium text-gray-900 leading-relaxed">
                                 {question.content}
                               </p>
+                              {question.author_name && (
+                                <p className="text-sm text-gray-500 mb-4">par {question.author_name}</p>
+                              )}
                               
                               <div className="flex items-center gap-6 text-sm text-gray-600">
                                 <div className="flex items-center gap-1">
@@ -744,9 +748,12 @@ export default function Projection() {
                             }
                           `}
                         >
-                          <p className="text-sm text-gray-900 mb-2 line-clamp-2">
+                          <p className="text-sm text-gray-900 line-clamp-2">
                             {question.content}
                           </p>
+                          {question.author_name && (
+                            <p className="text-xs text-gray-500 mb-2">par {question.author_name}</p>
+                          )}
                           <div className="flex items-center justify-between text-xs text-gray-600">
                             <span>{getQuestionAge(question.created_at)}</span>
                             <div className="flex items-center gap-1">
