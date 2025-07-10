@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import QRCode from 'react-qr-code';
 import { useParams } from 'react-router-dom';
 import { PanelService } from '@/services/panelService';
 import { supabase } from '@/lib/supabase';
@@ -6,11 +7,12 @@ import type { Panel } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  MessageSquare, 
-  Users, 
-  TrendingUp, 
-  Wifi, 
+import {
+  MessageSquare,
+  Users,
+  User,
+  TrendingUp,
+  Wifi,
   WifiOff,
   Clock,
   Zap,
@@ -37,6 +39,8 @@ interface Question {
   created_at: string;
   author_name?: string | null;
   author_structure?: string | null;
+  panelist_name?: string | null;
+  panelist_structure?: string | null;
   responses?: Array<{ content: string }>;
 }
 
@@ -48,6 +52,8 @@ interface RealtimeStats {
 
 export default function Projection() {
   const { panelId } = useParams<{ panelId: string}>();
+  const [showQRCode, setShowQRCode] = useState(false);
+  const qrCodeUrl = panelId ? `${window.location.origin}/panel/${panelId}/questions` : '';
   const [panel, setPanel] = useState<Panel | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const {
@@ -134,12 +140,7 @@ export default function Projection() {
 
   useEffect(() => {
     if (!panelId) return;
-    
-    setIsLoading(true);
-    PanelService.getPanelById(panelId)
-      .then(setPanel)
-      .catch((err) => console.error('Error loading panel', err))
-      .finally(() => setIsLoading(false));
+    PanelService.getPanelById(panelId).then(setPanel);
   }, [panelId]);
 
   useEffect(() => {
@@ -282,26 +283,12 @@ export default function Projection() {
               
               {/* Statut de connexion */}
               <div className="flex items-center gap-2">
-                <div className={`
-                  flex items-center gap-2 px-3 py-1 rounded-full transition-all
-                  ${isPaused 
-                    ? 'bg-orange-100 text-orange-700' 
-                    : isConnected 
-                      ? 'text-white' 
-                      : 'bg-red-100 text-red-700'
-                  }
-                  ${connectionPulse ? 'scale-110' : ''}
-                `}
-                style={isConnected && !isPaused ? { background: 'linear-gradient(135deg, #0c54a4, #046eb6)' } : {}}
-                >
-                  {isPaused ? (
-                    <Pause className="h-4 w-4" />
-                  ) : isConnected ? (
-                    <Wifi className={`h-4 w-4 ${connectionPulse ? 'animate-pulse' : ''}`} />
-                  ) : (
-                    <WifiOff className="h-4 w-4 animate-pulse" />
-                  )}
-                  <span className="font-medium text-sm">{getConnectionStatusText()}</span>
+                <div className="flex items-center gap-2">
+                  <img
+                    src="/images/ivoiretech.png"
+                    alt="Logo IvoireTech"
+                    className="h-8 ml-2"
+                  />
                 </div>
               </div>
             </div>
@@ -446,16 +433,28 @@ export default function Projection() {
                               <p className="text-lg font-medium text-gray-900 leading-relaxed">
                                 {question.content}
                               </p>
-                              {question.author_name && (
-                                <p className="text-sm text-gray-500 mb-4">par {question.author_name}</p>
-                              )}
+                              <div className="flex flex-wrap gap-2 text-sm text-gray-500 mb-4">
+                                {question.panelist_name && (
+                                  <span className="bg-blue-50 px-2 py-1 rounded flex items-center gap-1">
+                                    <User className="h-3 w-3 text-blue-600" />
+                                    <span>
+                                      Pour: {question.panelist_name}
+                                      {question.panelist_structure && ` (${question.panelist_structure})`}
+                                    </span>
+                                  </span>
+                                )}
+                                {question.author_name && (
+                                  <span className="bg-gray-50 px-2 py-1 rounded flex items-center gap-1">
+                                    <User className="h-3 w-3 text-gray-600" />
+                                    <span>
+                                      Par: {question.author_name}
+                                      {question.author_structure && ` (${question.author_structure})`}
+                                    </span>
+                                  </span>
+                                )}
+                              </div>
                               
                               <div className="flex items-center gap-6 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
-                                  <ThumbsUp className="h-4 w-4" />
-                                  <span className="font-medium">{responseCount}</span>
-                                  <span>interaction{responseCount > 1 ? 's' : ''}</span>
-                                </div>
                                 
                                 <div className="flex items-center gap-1">
                                   <Timer className="h-4 w-4" />
@@ -517,6 +516,153 @@ export default function Projection() {
               </CardContent>
             </Card>
 
+            {/* Bouton QR Code */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2">
+                  <Radio className="h-5 w-5" style={{ color: '#0c54a4' }} />
+                  Accès questionnaire
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowQRCode(true)}
+                >
+                  Afficher le QR Code
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Modal QR Code - Plein écran */}
+            {showQRCode && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg">
+                <div className="relative w-full h-full max-w-[90vw] max-h-[90vh] p-8 flex flex-col">
+                  <div className="absolute top-8 right-8 flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const qrCode = document.getElementById('qr-code-download');
+                        if (qrCode) {
+                          const canvas = document.createElement('canvas');
+                          canvas.width = qrCode.clientWidth;
+                          canvas.height = qrCode.clientHeight;
+                          const ctx = canvas.getContext('2d');
+                          if (ctx) {
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            // Capture le QR Code et le logo ensemble
+                            if (qrCode instanceof HTMLElement) {
+                              import('html2canvas').then(({ default: html2canvas }) => {
+                                return html2canvas(qrCode);
+                              }).then(canvas => {
+                                const pngFile = canvas.toDataURL('image/png');
+                                const downloadLink = document.createElement('a');
+                                downloadLink.download = `QR-Code-${panel?.title || 'Panel'}.png`;
+                                downloadLink.href = pngFile;
+                                downloadLink.click();
+                              }).catch(error => {
+                                console.error('Erreur lors de la capture du QR Code:', error);
+                                // Fallback simple si html2canvas échoue
+                                const svg = qrCode.querySelector('svg');
+                                if (svg) {
+                                  const svgData = new XMLSerializer().serializeToString(svg);
+                                  const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                                  const url = URL.createObjectURL(svgBlob);
+                                  const downloadLink = document.createElement('a');
+                                  downloadLink.download = `QR-Code-${panel?.title || 'Panel'}.svg`;
+                                  downloadLink.href = url;
+                                  downloadLink.click();
+                                  URL.revokeObjectURL(url);
+                                }
+                              });
+                            }
+                          }
+                        }
+                      }}
+                      className="p-3 rounded-full hover:bg-gray-100 z-10"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6 text-gray-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                    </Button>
+                    <button
+                      onClick={() => setShowQRCode(false)}
+                      className="p-3 rounded-full hover:bg-gray-100 z-10"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6 text-gray-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col items-center justify-center gap-8">
+                    <img
+                      src="/images/ivoiretech.png"
+                      alt="Logo IvoireTech"
+                      className="h-16 mx-auto"
+                    />
+                    
+                    <div className="flex-1 flex items-center justify-center w-full">
+                      <div className="p-8 bg-white rounded-2xl shadow-2xl">
+                        <div id="qr-code-download" className="relative">
+                          <QRCode
+                            value={qrCodeUrl}
+                            size={512}
+                            level="H"
+                            fgColor="#0c54a4"
+                            bgColor="#ffffff"
+                            className="mx-auto"
+                          />
+                          <img
+                            src="/images/ivoiretech.png"
+                            alt="Logo IvoireTech"
+                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-24 w-24"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-2xl text-gray-200 text-center max-w-2xl">
+                      Scannez ce QR Code avec votre appareil mobile pour accéder au questionnaire
+                    </h3>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowQRCode(false)}
+                      className="mt-8 px-8 py-4 text-xl bg-white hover:bg-gray-50"
+                      size="lg"
+                    >
+                      Fermer la vue QR Code
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Statistiques temps réel */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
@@ -554,6 +700,8 @@ export default function Projection() {
                 </div>
               </CardContent>
             </Card>
+
+            
           </div>
         </div>
 

@@ -78,7 +78,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
   const [newQuestion, setNewQuestion] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [authorStructure, setAuthorStructure] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [selectedPanelistEmail, setSelectedPanelistEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'recent' | 'answered' | 'unanswered'>('recent');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,7 +101,14 @@ export default function Questions({ panel }: { panel?: Panel }) {
   };
 
 
+  const [validationError, setValidationError] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
+    if (!authorName.trim() || !authorStructure.trim()) {
+      setValidationError('Veuillez renseigner votre nom et votre structure');
+      return;
+    }
+    setValidationError('');
     e.preventDefault();
     logger.debug('Submit triggered', { newQuestion, panel });
     
@@ -263,7 +270,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
     color, 
     gradient 
   }: { 
-    icon: any; 
+    icon: LucideIcon;
     value: number; 
     label: string; 
     color: string;
@@ -292,12 +299,12 @@ export default function Questions({ panel }: { panel?: Panel }) {
   }: { 
     id: string; 
     label: string; 
-    icon: any; 
+    icon: LucideIcon;
     count: number;
     isActive: boolean;
   }) => (
     <button
-      onClick={() => setActiveTab(id as any)}
+      onClick={() => setActiveTab(id as 'recent' | 'answered' | 'unanswered')}
       className={`relative flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 group ${
         isActive 
           ? 'text-white shadow-lg transform -translate-y-0.5' 
@@ -530,19 +537,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Switch
-                      id="anonymous"
-                      checked={isAnonymous}
-                      onCheckedChange={setIsAnonymous}
-                    />
-                    <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                      {isAnonymous ? <UserX className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                      Poser anonymement
-                    </Label>
-                  </div>
-                  {!isAnonymous && (
-                    <>
+                  <div className="space-y-4">
                       <div>
                         <Label className="block text-sm font-semibold text-gray-700 mb-2">
                           Votre nom
@@ -552,6 +547,7 @@ export default function Questions({ panel }: { panel?: Panel }) {
                           value={authorName}
                           onChange={(e) => setAuthorName(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
+                          required
                         />
                       </div>
                       <div>
@@ -563,14 +559,20 @@ export default function Questions({ panel }: { panel?: Panel }) {
                           value={authorStructure}
                           onChange={(e) => setAuthorStructure(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-200"
+                          required
                         />
                       </div>
-                    </>
+                  </div>
+
+                  {validationError && (
+                    <div className="text-red-500 text-sm mb-4">
+                      {validationError}
+                    </div>
                   )}
 
                   <button
                     type="submit"
-                    disabled={isSubmitting || !newQuestion.trim()}
+                    disabled={isSubmitting || !newQuestion.trim() || !authorName.trim() || !authorStructure.trim()}
                     className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-white font-semibold text-lg hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:scale-100"
                     style={{ background: 'linear-gradient(135deg, #0c54a4, #046eb6)' }}
                   >

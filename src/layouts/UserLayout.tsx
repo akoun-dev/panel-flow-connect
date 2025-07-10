@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -25,9 +24,6 @@ const panelistMenuItems = [
     { title: "MES INVITATIONS", url: "/invitations", icon: MessageSquare },
     { title: "MES SESSIONS", url: "/sessions", icon: Mic },
     { title: "PLANNING", url: "/planning", icon: Calendar },
-    // { title: "MES QUESTIONS", url: "/questions", icon: MessageSquare },
-    // { title: "MES NOTES (IA)", url: "/notes", icon: FileText },
-    // { title: "MON HISTORIQUE", url: "/history", icon: Clock },
     { title: "MON PROFIL", url: "/profile", icon: User },
 ]
 
@@ -46,7 +42,7 @@ function CurrentTime() {
   }, []);
 
   return (
-    <div className="hidden sm:flex items-center gap-2 text-sm text-[#0c70a8] dark:text-[#45b9bc]">
+    <div className="hidden sm:flex items-center gap-2 text-sm" style={{ color: '#0c54a4' }}>
       <Clock className="h-4 w-4" />
       <div className="flex items-baseline gap-1">
         <span className="font-medium">{format(currentTime, "HH:mm", { locale: fr })}</span>
@@ -73,9 +69,9 @@ export function UserLayout({ children }: UserLayoutProps) {
   const menuItems = panelistMenuItems;
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-[#84c282]/20 to-[#5cbcb4]/30 dark:from-[#347080] dark:to-[#045ca4]">
+      <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
           {/* Header spécifique panéliste */}
-          <header className="bg-white/90 dark:bg-[#347080]/90 backdrop-blur-sm border-b border-[#84c282]/30 dark:border-[#045ca4] sticky top-0 z-40">
+          <header className="bg-white/90 backdrop-blur-sm border-b border-white/50 sticky top-0 z-40">
               <div className="px-2 sm:px-4 lg:px-6">
                   <div className="flex justify-between items-center h-16">
                       <div className="flex items-center gap-2 sm:gap-4">
@@ -100,7 +96,7 @@ export function UserLayout({ children }: UserLayoutProps) {
                                     alt="IvoireTech Logo"
                                     className="h-4 sm:h-6 mb-1"
                                   />
-                                  <p className="text-xs sm:text-sm text-[#45b9bc] dark:text-[#84c282]">
+                                  <p className="text-xs sm:text-sm" style={{ color: '#19b3d2' }}>
                                       MON ESPACE
                                   </p>
                               </div>
@@ -113,14 +109,14 @@ export function UserLayout({ children }: UserLayoutProps) {
                               <button className="flex items-center gap-2 focus:outline-none">
                                   <Avatar className="h-9 w-9">
                                       <AvatarImage src="/avatars/panelist.png" />
-                                      <AvatarFallback className="bg-[#84c282]/20 text-[#0c54a4] dark:bg-[#045ca4] dark:text-[#5cbcb4]">
+                                      <AvatarFallback className="bg-blue-100" style={{ color: '#0c54a4' }}>
                                           <User className="h-4 w-4" />
                                       </AvatarFallback>
                                   </Avatar>
                               </button>
-                              <div className="absolute right-0 mt-2 w-56 origin-top-right bg-white dark:bg-[#347080] rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                              <div className="absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                   <div className="py-1">
-                                      <div className="px-4 py-2 text-sm text-gray-700 dark:text-[#84c282] border-b border-gray-100 dark:border-[#045ca4]">
+                                      <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
                                           {userEmail}
                                       </div>
                                       <button
@@ -128,7 +124,7 @@ export function UserLayout({ children }: UserLayoutProps) {
                                               const { error } = await supabase.auth.signOut()
                                               if (!error) window.location.href = '/auth/login'
                                           }}
-                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-[#84c282] hover:bg-gray-100 dark:hover:bg-[#045ca4]/50"
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                       >
                                           Déconnexion
                                       </button>
@@ -144,7 +140,7 @@ export function UserLayout({ children }: UserLayoutProps) {
               {/* Sidebar spécifique panéliste */}
               <aside
                   className={cn(
-                      "fixed inset-y-0 left-0 z-50 w-56 sm:w-64 bg-white/95 dark:bg-[#347080]/95 backdrop-blur-sm border-r border-[#84c282]/30 dark:border-[#045ca4] transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 mt-16 lg:mt-0",
+                      "fixed inset-y-0 left-0 z-50 w-56 sm:w-64 bg-white/95 backdrop-blur-sm border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 mt-16 lg:mt-0",
                       sidebarOpen ? "translate-x-0" : "-translate-x-full"
                   )}
               >
@@ -158,9 +154,10 @@ export function UserLayout({ children }: UserLayoutProps) {
                                   className={cn(
                                       "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                                       isActive
-                                          ? "bg-[#84c282]/20 dark:bg-[#045ca4] text-[#0c54a4] dark:text-[#5cbcb4] shadow-sm"
-                                          : "text-gray-600 dark:text-gray-300 hover:bg-[#84c282]/10 dark:hover:bg-[#347080] hover:text-[#45b9bc] dark:hover:text-[#84c282]"
+                                          ? "text-white shadow-sm"
+                                          : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
                                   )}
+                                  style={isActive ? { background: 'linear-gradient(135deg, #0c54a4, #046eb6)' } : {}}
                                   onClick={() => setSidebarOpen(false)}
                               >
                                   <item.icon className="h-5 w-5" />

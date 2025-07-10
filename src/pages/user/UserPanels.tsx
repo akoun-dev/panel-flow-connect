@@ -90,6 +90,8 @@ interface PanelFormData {
   participants_limit: number;
   category: string;
   user_id: string;
+  moderator_name: string;
+  moderator_email: string;
   panelists: Array<{
     name: string;
     email: string;
@@ -156,6 +158,8 @@ export function UserPanels() {
     participants_limit: 30,
     category: "Technologie",
     user_id: user?.id || "",
+    moderator_name: "",
+    moderator_email: "",
     panelists: [{
       name: "",
       email: "",
@@ -364,6 +368,8 @@ export function UserPanels() {
       participants_limit: 30,
       category: "Technologie",
       user_id: user?.id || "",
+      moderator_name: "",
+      moderator_email: "",
       panelists: [{ name: "", email: "", title: "", topic: "", duration: 15 }]
     };
     setPanelForm(emptyForm);
@@ -498,9 +504,6 @@ export function UserPanels() {
     setIsSubmitting(true);
 
     try {
-      const moderatorName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim() || 'Modérateur';
-      const moderatorEmail = userProfile.email || user.email || '';
-
       const panelData = {
         title: panelForm.title,
         description: panelForm.description,
@@ -510,8 +513,8 @@ export function UserPanels() {
         participants_limit: panelForm.participants_limit,
         category: panelForm.category,
         user_id: user.id,
-        moderator_name: moderatorName,
-        moderator_email: moderatorEmail,
+        moderator_name: panelForm.moderator_name || `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim() || 'Modérateur',
+        moderator_email: panelForm.moderator_email || userProfile.email || user.email || '',
         tags: [],
         panelists: panelForm.panelists.filter(p => p.name && p.email)
       };
@@ -1227,6 +1230,18 @@ export function UserPanels() {
                         <span>{managePanelModal.panel.time}</span>
                       </div>
                     </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Modérateur</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span>{managePanelModal.panel.moderator_name || 'Non spécifié'}</span>
+                        {managePanelModal.panel.moderator_email && (
+                          <span className="text-muted-foreground text-sm">
+                            ({managePanelModal.panel.moderator_email})
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="space-y-4">
@@ -1433,6 +1448,35 @@ export function UserPanels() {
                       <SelectItem value="Autre">Autre</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              {/* Modérateur */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="moderator_name" className="text-sm font-medium">
+                    Nom du modérateur
+                  </Label>
+                  <Input
+                    id="moderator_name"
+                    value={panelForm.moderator_name}
+                    onChange={(e) => handleFormChange('moderator_name', e.target.value)}
+                    placeholder="Nom du modérateur"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="moderator_email" className="text-sm font-medium">
+                    Email du modérateur
+                  </Label>
+                  <Input
+                    id="moderator_email"
+                    type="email"
+                    value={panelForm.moderator_email}
+                    onChange={(e) => handleFormChange('moderator_email', e.target.value)}
+                    placeholder="Email du modérateur"
+                    className="w-full"
+                  />
                 </div>
               </div>
 
